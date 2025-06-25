@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Global Styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: #121212; /* Dark background */
+            color: #f5f5f5; /* Light text for dark theme */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background-color: #1a1a1a;
+            border-bottom: 1px solid #262626;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header .left-section {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .back-icon {
+            font-size: 24px;
+            color: #f5f5f5;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .header .username-display {
+            font-weight: bold;
+            font-size: 20px;
+            color: #f5f5f5;
+            display: flex;
+            align-items: center;
+        }
+
+        .header .verified-badge {
+            width: 18px;
+            height: 18px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .profile-section {
+            width: 100%;
+            max-width: 600px;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .profile-picture-container {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: #363636;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin-bottom: 10px;
+            border: 2px solid #363636; /* Default border */
+        }
+
+        .profile-picture-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .profile-picture-container .initials {
+            font-size: 50px;
+            font-weight: bold;
+            color: #f5f5f5;
+        }
+
+        .bio-section {
+            width: 100%;
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        .bio-text {
+            color: #f5f5f5;
+            font-size: 15px;
+            margin-bottom: 10px;
+            white-space: pre-wrap; /* Preserve whitespace and break lines */
+        }
+
+        .stats-section {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 400px; /* Limit width for stats */
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-item .count {
+            font-weight: bold;
+            font-size: 18px;
+            color: #f5f5f5;
+        }
+
+        .stat-item .label {
+            font-size: 14px;
+            color: #8e8e8e;
+            margin-top: 2px;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .profile-actions button {
+            background-color: #0095f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .profile-actions button:hover {
+            background-color: #007bb5;
+        }
+
+        .profile-actions button.following {
+            background-color: #333333;
+            color: #f5f5f5;
+            border: 1px solid #555555;
+        }
+
+        .profile-actions button.following:hover {
+            background-color: #444444;
+        }
+
+        .user-posts-section {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 30px;
+            border-top: 1px solid #262626;
+            padding-top: 20px;
+        }
+
+        .user-posts-section h3 {
+            text-align: center;
+            color: #f5f5f5;
+            margin-bottom: 20px;
+        }
+
+        /* Post Card Styles (Copied directly from profile.html) */
+        .post-card {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+            width: 100%; /* Take full width of its container */
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .post-card:hover {
+            background-color: #212121; /* Slight hover effect */
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            position: relative;
+        }
+
+        .post-header .profile-pic {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #363636;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin-right: 10px;
+        }
+
+        .post-header .profile-pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .post-header .profile-pic .initials {
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .post-header .username {
+            font-weight: bold;
+            color: #f5f5f5;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap; /* Allow wrapping for long usernames/collab text */
+        }
+
+        .post-header .username .verified-badge {
+            width: 14px;
+            height: 14px;
+            margin-left: 5px;
+        }
+
+        /* NEW: Collab Text Style */
+        .post-header .collab-text {
+            font-size: 13px;
+            color: #8e8e8e;
+            margin-left: 5px;
+        }
+
+        .post-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            display: block;
+            background-color: #000;
+        }
+
+        .post-actions {
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .post-actions .action-icon {
+            font-size: 24px;
+            color: #f5f5f5;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .post-actions .action-icon:hover {
+            opacity: 0.7;
+        }
+
+        .post-actions .action-icon.liked {
+            color: #ed4956;
+        }
+
+        .post-likes-comments {
+            padding: 0 15px 10px;
+            font-size: 14px;
+            color: #f5f5f5;
+            font-weight: bold;
+            display: flex;
+            gap: 15px;
+        }
+
+        .post-likes-comments .likes-count,
+        .post-likes-comments .comments-count {
+            color: #f5f5f5;
+        }
+
+        /* --- UPDATED CSS FOR CAPTION WITH USERNAME AND INLINE TEXT --- */
+        .post-caption {
+            padding: 0 15px 10px;
+            font-size: 14px;
+            color: #f5f5f5;
+            white-space: pre-wrap; /* Preserve formatting for breaks within caption text */
+            display: flex; /* Use flexbox to put username and text on same line */
+            align-items: baseline; /* Align items at their text baselines */
+            flex-wrap: wrap; /* Allow caption text to wrap if it's too long */
+        }
+
+        .post-caption .caption-username {
+            font-weight: bold;
+            color: #f5f5f5;
+            margin-right: 5px; /* Space between username and caption text */
+            display: inline-flex; /* Use inline-flex to contain the username and badge */
+            align-items: center;
+            white-space: nowrap; /* Prevent username and badge from wrapping */
+        }
+
+        .post-caption .caption-username .verified-badge {
+            width: 14px;
+            height: 14px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+        .post-caption .caption-text {
+            /* No specific styling needed unless you want it different from default */
+            flex-grow: 1; /* Allows caption text to take up remaining space */
+        }
+        /* --- END UPDATED CSS FOR CAPTION --- */
+
+        .post-timestamp {
+            padding: 0 15px 12px;
+            font-size: 12px;
+            color: #8e8e8e;
+        }
+
+        .no-posts-message {
+            text-align: center;
+            padding: 30px 0;
+            color: #8e8e8e;
+            font-size: 16px;
+        }
+
+        /* Post Options (Three Dots Menu) - Hidden for other users' profiles */
+        .post-options {
+            display: none; /* Hide for user_profile.html */
+        }
+
+        /* Footer Navigation (Copied from other pages) */
+        .footer {
+            background-color: #1a1a1a;
+            border-top: 1px solid #262626;
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: sticky;
+            bottom: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .footer .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #f5f5f5;
+            font-size: 22px;
+            transition: color 0.2s ease;
+            flex-basis: 20%;
+            text-align: center;
+        }
+
+        .footer .nav-item i {
+            margin-bottom: 3px;
+        }
+
+        /* Profile picture in footer */
+        .footer .profile-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: #b3b3b3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            overflow: hidden;
+            margin-bottom: 3px;
+            border: 2px solid transparent;
+        }
+
+        .footer .profile-circle.has-image {
+            border-color: #f5f5f5;
+        }
+
+        .footer .profile-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .footer .nav-item.active {
+            color: #0095f6;
+        }
+
+        .footer .nav-item:hover {
+            color: #8e8e8e;
+        }
+
+        .footer .nav-item.active .profile-circle {
+            border-color: #0095f6;
+        }
+
+        /* Responsive Adjustments (Same as profile.html) */
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+            .header .username-display {
+                font-size: 18px;
+            }
+            .header .menu-icon {
+                font-size: 20px;
+            }
+            .profile-picture-container {
+                width: 100px;
+                height: 100px;
+            }
+            .profile-picture-container .initials {
+                font-size: 40px;
+            }
+            .stats-section {
+                margin-top: 15px;
+            }
+            .stat-item .count {
+                font-size: 16px;
+            }
+            .stat-item .label {
+                font-size: 12px;
+            }
+            .user-posts-section {
+                margin-top: 20px;
+                padding-top: 15px;
+            }
+            .user-posts-section h3 {
+                font-size: 18px;
+            }
+            .post-card {
+                margin-bottom: 15px;
+            }
+            .post-header {
+                padding: 10px 12px;
+            }
+            .post-header .profile-pic {
+                width: 28px;
+                height: 28px;
+            }
+            .post-header .profile-pic .initials {
+                font-size: 14px;
+            }
+            .post-header .username {
+                font-size: 14px;
+            }
+            .post-actions {
+                font-size: 22px;
+                padding: 8px 12px;
+                gap: 12px;
+            }
+            .post-likes-comments {
+                font-size: 13px;
+                padding: 0 12px 8px;
+                gap: 12px;
+            }
+            /* Adjusted for new caption structure */
+            .post-caption {
+                font-size: 13px;
+                padding: 0 12px 8px; /* Adjusted padding */
+            }
+            .post-caption .caption-username {
+                font-size: 13px; /* Ensure consistency */
+            }
+            .post-caption .caption-username .verified-badge {
+                width: 12px; /* Smaller badge for smaller screens */
+                height: 12px;
+            }
+            /* End adjusted for new caption structure */
+            .post-timestamp {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 8px 12px;
+            }
+            .header .username-display {
+                font-size: 16px;
+            }
+            .profile-section {
+                padding: 15px;
+                gap: 15px;
+            }
+            .profile-picture-container {
+                width: 80px;
+                height: 80px;
+            }
+            .profile-picture-container .initials {
+                font-size: 30px;
+            }
+            .stats-section {
+                margin-top: 10px;
+                width: 100%;
+                justify-content: space-between;
+            }
+            .stat-item .count {
+                font-size: 15px;
+            }
+            .stat-item .label {
+                font-size: 11px;
+            }
+            .user-posts-section {
+                margin-top: 15px;
+                padding-top: 10px;
+            }
+            .user-posts-section h3 {
+                font-size: 16px;
+            }
+            .post-card {
+                margin-bottom: 10px;
+            }
+            .post-header {
+                padding: 8px 10px;
+            }
+            .post-header .profile-pic {
+                width: 26px;
+                height: 26px;
+            }
+            .post-header .profile-pic .initials {
+                font-size: 12px;
+            }
+            .post-header .username {
+                font-size: 13px;
+            }
+            .post-actions {
+                font-size: 20px;
+                gap: 10px;
+                padding: 6px 10px;
+            }
+            .post-likes-comments {
+                font-size: 12px;
+                padding: 0 10px 6px;
+                gap: 10px;
+            }
+            /* Adjusted for new caption structure */
+            .post-caption {
+                font-size: 12px;
+                padding: 0 10px 6px;
+            }
+            .post-caption .caption-username {
+                font-size: 12px;
+            }
+            .post-caption .caption-username .verified-badge {
+                width: 10px;
+                height: 10px;
+            }
+            /* End adjusted for new caption structure */
+            .post-timestamp {
+                font-size: 10px;
+                padding: 0 10px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="left-section">
+            <i class="fas fa-arrow-left back-icon" onclick="history.back()"></i>
+            <span class="username-display" id="userProfileUsername">Loading...</span>
+            <span id="userVerifiedBadgePlaceholder"></span>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="profile-section">
+            <div class="profile-picture-container" id="profilePictureContainer">
+                <span class="initials" id="userProfileInitials"></span>
+                <img id="userProfileImage" src="" alt="Profile Picture" style="display: none;">
+            </div>
+
+            <div class="bio-section">
+                <p class="bio-text" id="userBioText"></p>
+            </div>
+
+            <div class="stats-section">
+                <div class="stat-item">
+                    <span class="count" id="userPostsCount">0</span>
+                    <span class="label">Posts</span>
+                </div>
+                <div class="stat-item">
+                    <span class="count" id="userFollowersCount">0</span>
+                    <span class="label">Followers</span>
+                </div>
+                <div class="stat-item">
+                    <span class="count" id="userFollowingCount">0</span>
+                    <span class="label">Following</span>
+                </div>
+            </div>
+
+            <div class="profile-actions" id="userProfileActions">
+                </div>
+        </div>
+
+        <div class="user-posts-section">
+            <h3>Posts</h3>
+            <div id="userPostsGrid">
+                <p class="no-posts-message" id="noPostsMessage">No posts yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <a href="home.html" class="nav-item" id="homeLink">
+            <i class="fas fa-home"></i>
+        </a>
+        <a href="search.html" class="nav-item" id="searchLink">
+            <i class="fas fa-search"></i>
+        </a>
+        <a href="create.html" class="nav-item" id="createPostLink">
+            <i class="fas fa-plus-square"></i>
+        </a>
+        <a href="notifications.html" class="nav-item" id="notificationsLink">
+            <i class="fas fa-heart"></i>
+        </a>
+        <a href="profile.html" class="nav-item" id="profileLink">
+            <div class="profile-circle" id="footerProfileCircle">
+            </div>
+        </a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-storage-compat.js"></script>
+
+    <script>
+        // Your Firebase project configuration (same as profile.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdu3d0_qEDZaXkBkJAO0VY0htme6_EMyM",
+            authDomain: "bluegram-27a79.firebaseapp.com",
+            databaseURL: "https://bluegram-27a79-default-rtdb.firebaseio.com",
+            projectId: "bluegram-27a79",
+            storageBucket: "bluegram-27a79.firebasestorage.app",
+            messagingSenderId: "780485443121",
+            appId: "1:780485443121:web:f7469d2264293fcbdf5f10",
+            measurementId: "G-YF5S9HK2Q5"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // DOM Elements
+        const userProfileUsername = document.getElementById('userProfileUsername');
+        const userVerifiedBadgePlaceholder = document.getElementById('userVerifiedBadgePlaceholder');
+        const userProfileInitials = document.getElementById('userProfileInitials');
+        const userProfileImage = document.getElementById('userProfileImage');
+        const userBioText = document.getElementById('userBioText');
+        const userPostsCountSpan = document.getElementById('userPostsCount');
+        const userFollowersCountSpan = document.getElementById('userFollowersCount');
+        const userFollowingCountSpan = document.getElementById('userFollowingCount');
+        const userProfileActions = document.getElementById('userProfileActions');
+        const userPostsGrid = document.getElementById('userPostsGrid');
+        const noPostsMessage = document.getElementById('noPostsMessage');
+
+        const footerProfileCircle = document.getElementById('footerProfileCircle');
+
+        let targetUserId = null; // The ID of the user whose profile we are viewing
+        let currentUserId = null; // The ID of the currently logged-in user
+        let currentUserData = null; // Data of the logged-in user (for following status and showing own username in collabs)
+        let targetUserData = null; // Data of the user whose profile is being viewed
+
+        // SVG for the verified badge (same as profile.html)
+        const verifiedSVG = `<svg class="verified-badge" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 256 256" xml:space="preserve">
+            <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                <polygon points="45,6.18 57.06,0 64.41,11.38 77.94,12.06 78.62,25.59 90,32.94 83.82,45 90,57.06 78.62,64.41 77.94,77.94 64.41,78.62 57.06,90 45,83.82 32.94,90 25.59,78.62 12.06,77.94 11.38,64.41 0,57.06 6.18,45 0,32.94 11.38,25.59 12.06,12.06 25.59,11.38 32.94,0 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; fill: rgb(0,150,241); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+                <polygon points="40.16,58.47 26.24,45.08 29.7,41.48 40.15,51.52 61.22,31.08 64.7,34.67 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+            </g>
+        </svg>`;
+
+        // Function to update the footer profile picture (same as profile.html)
+        function updateFooterProfilePicture(profilePictureUrl, username) {
+            footerProfileCircle.innerHTML = '';
+            footerProfileCircle.classList.remove('has-image');
+            
+            if (profilePictureUrl) {
+                const img = document.createElement('img');
+                img.src = profilePictureUrl;
+                img.alt = 'Profile Picture';
+                footerProfileCircle.appendChild(img);
+                footerProfileCircle.classList.add('has-image');
+            } else {
+                const firstLetter = (username && username.length > 0) ? username.charAt(0).toUpperCase() : 'P';
+                footerProfileCircle.textContent = firstLetter;
+                footerProfileCircle.classList.remove('has-image');
+            }
+        }
+
+        // Helper to get URL parameters
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            const results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // --- Authentication and Data Loading ---
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                console.log('No user logged in, redirecting to login.html');
+                window.location.href = 'login.html';
+                return;
+            }
+            currentUserId = user.uid;
+
+            // Get the target user ID from the URL
+            targetUserId = getUrlParameter('userId');
+            if (!targetUserId) {
+                console.error('No userId found in URL, redirecting to home.');
+                window.location.href = 'home.html';
+                return;
+            }
+
+            // If the user tries to view their own profile via user_profile.html, redirect to profile.html
+            if (targetUserId === currentUserId) {
+                window.location.href = 'profile.html';
+                return;
+            }
+
+            // Fetch current logged-in user's data (needed for follow/unfollow logic AND collaborator display)
+            db.collection('users').doc(currentUserId).onSnapshot((doc) => {
+                if (doc.exists) {
+                    currentUserData = doc.data();
+                    updateFooterProfilePicture(currentUserData.profilePictureUrl, currentUserData.username);
+                    displayProfileActions(); // Update follow button if current user's following list changes
+                    
+                    // Re-load target user's posts whenever currentUserData changes,
+                    // as it affects how "you" is displayed for collaborators.
+                    // This is triggered here to ensure correct display on initial load too.
+                    loadTargetUserPostsAndCollaborations();
+                    listenForTargetUserPostCount(); // Start listening for post count here
+                } else {
+                    console.warn("Logged-in user document does not exist.");
+                }
+            }, (error) => {
+                console.error("Error fetching logged-in user data:", error);
+            });
+
+            // Fetch target user's data
+            db.collection('users').doc(targetUserId).onSnapshot(async (doc) => {
+                if (doc.exists) {
+                    targetUserData = doc.data();
+                    console.log('Target user data updated:', targetUserData);
+                    displayUserProfile(); // Update UI with latest target user data
+                    displayProfileActions(); // Display follow/unfollow button
+                } else {
+                    console.error("Target user document does not exist for UID:", targetUserId);
+                    userProfileUsername.textContent = 'User Not Found';
+                    userBioText.textContent = 'This profile does not exist.';
+                    userPostsCountSpan.textContent = 0;
+                    userFollowersCountSpan.textContent = 0;
+                    userFollowingCountSpan.textContent = 0;
+                    userPostsGrid.innerHTML = '<p class="no-posts-message">User not found.</p>';
+                }
+            }, (error) => {
+                console.error("Error fetching target user document in real-time:", error);
+                userProfileUsername.textContent = 'Error';
+                userBioText.textContent = 'Could not load profile.';
+            });
+        });
+
+        // --- NEW: Function to listen for real-time post count updates ---
+        async function listenForTargetUserPostCount() {
+            if (!targetUserId) return;
+
+            // This approach is more complex than a single count query because Firestore
+            // doesn't have a direct "OR" query across different fields for counting.
+            // We need to fetch both sets and then deduplicate to get the total count.
+            // This is efficient enough for count updates as it's not rebuilding the UI.
+
+            db.collection('posts')
+                .where('userId', '==', targetUserId)
+                .onSnapshot(async (authorSnapshot) => {
+                    const authorPostIds = new Set(authorSnapshot.docs.map(doc => doc.id));
+
+                    db.collection('posts')
+                        .where('collaborators', 'array-contains', targetUserId)
+                        .onSnapshot((collaboratorSnapshot) => {
+                            let totalCount = authorPostIds.size;
+                            collaboratorSnapshot.docs.forEach(doc => {
+                                if (!authorPostIds.has(doc.id)) {
+                                    totalCount++;
+                                }
+                            });
+                            userPostsCountSpan.textContent = totalCount;
+                            
+                            // Also ensure the "No posts yet." message is updated correctly
+                            if (totalCount === 0) {
+                                noPostsMessage.style.display = 'block';
+                                if (!userPostsGrid.contains(noPostsMessage)) {
+                                    userPostsGrid.appendChild(noPostsMessage);
+                                }
+                            } else {
+                                noPostsMessage.style.display = 'none';
+                            }
+                        }, (error) => {
+                            console.error("Error listening for collaborator post count:", error);
+                        });
+                }, (error) => {
+                    console.error("Error listening for author post count:", error);
+                });
+        }
+        // --- END NEW FUNCTION ---
+
+
+        // MODIFIED: Function to load all posts by the target user OR where they are a collaborator
+        async function loadTargetUserPostsAndCollaborations() {
+            if (!targetUserId) return;
+
+            // 1. Fetch posts where target user is the primary author
+            const authorPostsSnapshot = await db.collection('posts')
+                .where('userId', '==', targetUserId)
+                .orderBy('timestamp', 'desc')
+                .get();
+
+            // 2. Fetch posts where target user is a collaborator
+            const collaboratorPostsSnapshot = await db.collection('posts')
+                .where('collaborators', 'array-contains', targetUserId)
+                .orderBy('timestamp', 'desc')
+                .get();
+
+            // Combine and deduplicate posts
+            const combinedPosts = new Map(); // Use a Map to store unique posts by ID
+
+            authorPostsSnapshot.docs.forEach(doc => {
+                combinedPosts.set(doc.id, { id: doc.id, ...doc.data() });
+            });
+
+            collaboratorPostsSnapshot.docs.forEach(doc => {
+                // Only add if not already present (i.e., not an author post already)
+                if (!combinedPosts.has(doc.id)) {
+                    combinedPosts.set(doc.id, { id: doc.id, ...doc.data() });
+                }
+            });
+
+            // Convert map values to an array and sort by timestamp (descending)
+            const sortedPosts = Array.from(combinedPosts.values()).sort((a, b) => {
+                const timestampA = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate().getTime() : 0;
+                const timestampB = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate().getTime() : 0;
+                return timestampB - timestampA;
+            });
+
+            // Pass a fabricated snapshot-like object to loadUserPosts
+            // Note: The post count is now handled by listenForTargetUserPostCount()
+            loadUserPosts({
+                empty: sortedPosts.length === 0,
+                docs: sortedPosts.map(post => ({ id: post.id, data: () => post }))
+            });
+        }
+
+
+        function displayUserProfile() {
+            if (!targetUserData) {
+                console.log("No target user data to display profile.");
+                return;
+            }
+
+            userProfileUsername.textContent = targetUserData.username || 'User';
+            if (targetUserData.isVerified) {
+                userVerifiedBadgePlaceholder.innerHTML = verifiedSVG;
+            } else {
+                userVerifiedBadgePlaceholder.innerHTML = '';
+            }
+
+            // Profile Picture
+            if (targetUserData.profilePictureUrl) {
+                userProfileImage.src = targetUserData.profilePictureUrl;
+                userProfileImage.style.display = 'block';
+                userProfileInitials.style.display = 'none';
+            } else {
+                userProfileImage.style.display = 'none';
+                userProfileInitials.style.display = 'flex';
+                userProfileInitials.textContent = (targetUserData.username && targetUserData.username.length > 0) ? targetUserData.username.charAt(0).toUpperCase() : 'P';
+            }
+
+            // Bio
+            const bioContent = targetUserData.bio || '';
+            userBioText.textContent = bioContent || 'No bio yet.';
+            if (bioContent === '') {
+                userBioText.style.color = '#8e8e8e';
+            } else {
+                userBioText.style.color = '#f5f5f5';
+            }
+
+            // Counts - Posts count will be updated by listenForTargetUserPostCount()
+            userFollowersCountSpan.textContent = targetUserData.followersCount || 0;
+            userFollowingCountSpan.textContent = targetUserData.followingCount || 0;
+        }
+
+        function displayProfileActions() {
+            userProfileActions.innerHTML = ''; // Clear existing buttons
+            if (!currentUserId || !targetUserId || !currentUserData || !targetUserData) return;
+
+            // Determine if the current user is following the target user
+            const isFollowing = currentUserData.following && currentUserData.following.includes(targetUserId);
+
+            const followButton = document.createElement('button');
+            followButton.id = 'followButton';
+            followButton.textContent = isFollowing ? 'Following' : 'Follow';
+            if (isFollowing) {
+                followButton.classList.add('following');
+            }
+            followButton.addEventListener('click', toggleFollow);
+            userProfileActions.appendChild(followButton);
+        }
+
+        async function toggleFollow() {
+            if (!currentUserId || !targetUserId || !currentUserData) {
+                console.warn("Authentication or user data missing for follow action.");
+                return;
+            }
+
+            const currentUserRef = db.collection('users').doc(currentUserId);
+            const targetUserRef = db.collection('users').doc(targetUserId);
+            const followButton = document.getElementById('followButton');
+
+            try {
+                const isFollowing = currentUserData.following && currentUserData.following.includes(targetUserId);
+                let currentFollowersCount = parseInt(userFollowersCountSpan.textContent);
+
+                if (isFollowing) {
+                    // Unfollow
+                    await currentUserRef.update({
+                        following: firebase.firestore.FieldValue.arrayRemove(targetUserId),
+                        followingCount: firebase.firestore.FieldValue.increment(-1)
+                    });
+                    await targetUserRef.update({
+                        followers: firebase.firestore.FieldValue.arrayRemove(currentUserId),
+                        followerCount: firebase.firestore.FieldValue.increment(-1)
+                    });
+                    console.log(`User ${currentUserId} unfollowed ${targetUserId}`);
+                    // No notification for unfollow
+
+                    // Update UI immediately
+                    followButton.textContent = 'Follow';
+                    followButton.classList.remove('following');
+                    userFollowersCountSpan.textContent = currentFollowersCount - 1; // Update count
+                    
+                    // Update currentUserData locally to reflect the change for subsequent checks
+                    currentUserData.following = currentUserData.following.filter(id => id !== targetUserId);
+
+                } else {
+                    // Follow
+                    await currentUserRef.update({
+                        following: firebase.firestore.FieldValue.arrayUnion(targetUserId),
+                        followingCount: firebase.firestore.FieldValue.increment(1)
+                    });
+                    await targetUserRef.update({
+                        followers: firebase.firestore.FieldValue.arrayUnion(currentUserId),
+                        followerCount: firebase.firestore.FieldValue.increment(1)
+                    });
+                    console.log(`User ${currentUserId} followed ${targetUserId}`);
+
+                    // Create a follow notification for the target user
+                    await db.collection('notifications').add({
+                        type: 'follow',
+                        actorUserId: currentUserId,
+                        targetUserId: targetUserId,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        read: false
+                    });
+
+                    // Update UI immediately
+                    followButton.textContent = 'Following';
+                    followButton.classList.add('following');
+                    userFollowersCountSpan.textContent = currentFollowersCount + 1; // Update count
+
+                    // Update currentUserData locally to reflect the change for subsequent checks
+                    if (!currentUserData.following) {
+                        currentUserData.following = [];
+                    }
+                    currentUserData.following.push(targetUserId);
+                }
+            } catch (error) {
+                console.error("Error toggling follow status:", error);
+                alert("Failed to update follow status. Please try again.");
+            }
+        }
+
+
+        // Helper to format Firestore Timestamps (same as profile.html)
+        function formatTimestamp(timestamp) {
+            if (!timestamp || !timestamp.toDate) {
+                return 'N/A';
+            }
+            const date = timestamp.toDate();
+            const now = new Date();
+            const diffMs = now.getTime() - date.getTime();
+            const diffSec = Math.round(diffMs / 1000);
+            const diffMin = Math.round(diffSec / 60);
+            const diffHrs = Math.round(diffMin / 60);
+            const diffDays = Math.round(diffHrs / 24);
+
+            if (diffSec < 60) return `${diffSec}s ago`;
+            if (diffMin < 60) return `${diffMin}m ago`;
+            if (diffHrs < 24) return `${diffHrs}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            if (diffDays < 30) return `${Math.round(diffDays / 7)}w ago`;
+            return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
+        // Load posts for the displayed user
+        async function loadUserPosts(querySnapshot) {
+            userPostsGrid.innerHTML = '';
+            // The visibility of noPostsMessage is now controlled by listenForTargetUserPostCount
+            // noPostsMessage.style.display = 'none'; // Removed this line
+
+            if (querySnapshot.empty) {
+                // If querySnapshot is empty, the count will be 0, and listenForTargetUserPostCount
+                // will correctly show the noPostsMessage.
+                // userPostsCountSpan.textContent = 0; // Removed this line as count is updated elsewhere
+                return;
+            }
+
+            const postPromises = querySnapshot.docs.map(async doc => {
+                const post = doc.data();
+                const postId = doc.id;
+
+                const postCard = document.createElement('div');
+                postCard.classList.add('post-card');
+                postCard.setAttribute('data-post-id', postId);
+
+                const formattedTime = formatTimestamp(post.timestamp);
+                const numLikes = post.likes || 0;
+                const likedBy = post.likedBy || [];
+                const hasLiked = likedBy.includes(currentUserId);
+
+                // For posts on a user's profile, the primary author displayed will always be the target user.
+                // However, the actual post.userId might be different if it's a collaborated post.
+                let postAuthorUsername = targetUserData ? (targetUserData.username || 'Unknown User') : 'Unknown User';
+                let postAuthorProfilePicUrl = targetUserData ? (targetUserData.profilePictureUrl || '') : '';
+                let postAuthorIsVerified = targetUserData ? (targetUserData.isVerified || false) : false;
+
+                // --- MODIFIED: Collaborator Display Logic for other users' profiles ---
+                let collabText = '';
+                if (post.collaborators && post.collaborators.length > 0) {
+                    // Filter out the primary author (post.userId) and the target user (if they are a collaborator but not the author)
+                    const relevantCollaboratorIds = post.collaborators.filter(id => id !== post.userId && id !== targetUserId);
+                    
+                    // If the target user is a collaborator AND NOT the author of this specific post, add "with [Target User's Username]"
+                    if (post.userId !== targetUserId && post.collaborators.includes(targetUserId)) {
+                         // We are on the target user's profile, so this post might have targetUser as a collaborator
+                         // In this case, the main username displayed should be the actual post.userId
+                         // And the collab text should show "with [Target User's Username]" or "with you"
+                         const mainAuthorDoc = await db.collection('users').doc(post.userId).get();
+                         if(mainAuthorDoc.exists){
+                             const mainAuthorData = mainAuthorDoc.data();
+                             postAuthorUsername = mainAuthorData.username || 'Unknown User';
+                             postAuthorProfilePicUrl = mainAuthorData.profilePictureUrl || '';
+                             postAuthorIsVerified = mainAuthorData.isVerified || false;
+                             
+                             collabText = `<span class="collab-text"> &bull; with `;
+                             if (targetUserId === currentUserId && currentUserData) {
+                                 collabText += `you`; // Display "you" for the logged-in user viewing their own collaborated post
+                             } else {
+                                 collabText += `${targetUserData.username}`; // Display target user's username
+                             }
+                             // Add other collaborators if any
+                             if (relevantCollaboratorIds.length > 0) {
+                                 const otherCollaboratorUsernames = [];
+                                 for (const collabId of relevantCollaboratorIds) {
+                                     if (collabId === currentUserId && currentUserData) {
+                                         otherCollaboratorUsernames.push('you');
+                                     } else {
+                                         const collabUserDoc = await db.collection('users').doc(collabId).get();
+                                         if (collabUserDoc.exists) {
+                                             otherCollaboratorUsernames.push(collabUserDoc.data().username);
+                                         }
+                                     }
+                                 }
+                                 if (otherCollaboratorUsernames.length > 0) {
+                                     collabText += `, ${otherCollaboratorUsernames.join(', ')}`;
+                                 }
+                             }
+                             collabText += `</span>`;
+
+                         }
+                    } else if (relevantCollaboratorIds.length > 0) { // If target user is the author and there are other collaborators
+                        const collaboratorUsernames = [];
+                        for (const collabId of relevantCollaboratorIds) {
+                            if (collabId === currentUserId && currentUserData) {
+                                collaboratorUsernames.push('you');
+                            } else {
+                                const collabUserDoc = await db.collection('users').doc(collabId).get();
+                                if (collabUserDoc.exists) {
+                                    collaboratorUsernames.push(collabUserDoc.data().username);
+                                }
+                            }
+                        }
+                        if (collaboratorUsernames.length > 0) {
+                            collabText = `<span class="collab-text"> &bull; with ${collaboratorUsernames.join(', ')}</span>`;
+                        }
+                    }
+                }
+                // --- END MODIFIED: Collaborator Display Logic ---
+
+
+                postCard.innerHTML = `
+                    <div class="post-header">
+                        <div class="profile-pic">
+                            ${postAuthorProfilePicUrl ? `<img src="${postAuthorProfilePicUrl}" alt="${postAuthorUsername}'s profile pic">` : `<span class="initials">${postAuthorUsername.charAt(0).toUpperCase()}</span>`}
+                        </div>
+                        <span class="username">
+                            ${postAuthorUsername}
+                            ${postAuthorIsVerified ? verifiedSVG : ''}
+                            ${collabText}
+                        </span>
+                    </div>
+                    <img src="${post.imageUrl}" alt="Post Image" class="post-image">
+                    <div class="post-actions">
+                        <i class="${hasLiked ? 'fas' : 'far'} fa-heart action-icon ${hasLiked ? 'liked' : ''}" data-postid="${postId}"></i>
+                        <i class="far fa-comment action-icon" data-postid="${postId}"></i>
+                    </div>
+                    <div class="post-likes-comments">
+                        <span class="likes-count">${numLikes} likes</span>
+                    </div>
+                    <div class="post-caption">
+                        <span class="caption-username">
+                            ${postAuthorUsername}
+                            ${postAuthorIsVerified ? verifiedSVG : ''}
+                        </span>
+                        <span class="caption-text">${post.caption}</span>
+                    </div>
+                    <div class="post-timestamp">${formattedTime}</div>
+                `;
+                return postCard;
+            });
+
+            const postCards = await Promise.all(postPromises); // Wait for all post cards to be built
+            postCards.forEach(card => {
+                userPostsGrid.appendChild(card);
+
+                // Add click listener to the entire post card for single post view
+                card.addEventListener('click', (event) => {
+                    if (!event.target.closest('.action-icon')) {
+                        viewSinglePost(card.getAttribute('data-post-id'));
+                    }
+                });
+
+                // Add event listener for the comment icon specifically
+                const commentIcon = card.querySelector('.post-actions .fa-comment');
+                if (commentIcon) {
+                    commentIcon.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        const postId = commentIcon.dataset.postid;
+                        window.location.href = `comments.html?postId=${postId}`;
+                    });
+                }
+
+                // Add event listener for the like icon specifically
+                const likeIcon = card.querySelector('.post-actions .fa-heart');
+                if (likeIcon) {
+                    likeIcon.addEventListener('click', async (event) => {
+                        event.stopPropagation();
+                        const postId = likeIcon.dataset.postid;
+                        const postRef = db.collection('posts').doc(postId);
+                        const currentLikesSpan = card.querySelector('.likes-count');
+                        let currentLikes = parseInt(currentLikesSpan.textContent.split(' ')[0]);
+
+                        try {
+                            if (likeIcon.classList.contains('liked')) {
+                                // Unlike
+                                await postRef.update({
+                                    likes: firebase.firestore.FieldValue.increment(-1),
+                                    likedBy: firebase.firestore.FieldValue.arrayRemove(currentUserId)
+                                });
+                                currentLikes--;
+                                likeIcon.classList.remove('liked', 'fas');
+                                likeIcon.classList.add('far');
+                                console.log(`Post ${postId} unliked!`);
+                            } else {
+                                // Like
+                                await postRef.update({
+                                    likes: firebase.firestore.FieldValue.increment(1),
+                                    likedBy: firebase.firestore.FieldValue.arrayUnion(currentUserId)
+                                });
+                                currentLikes++;
+                                likeIcon.classList.add('liked', 'fas');
+                                likeIcon.classList.remove('far');
+                                console.log(`Post ${postId} liked!`);
+
+                                // Add notification for the post owner (target user)
+                                // IMPORTANT: Here, 'post.userId' is the actual author of the post,
+                                // which might be different from 'targetUserId' if the target user is a collaborator.
+                                // We should send the notification to the actual post author.
+                                const postOwnerId = post.userId; 
+                                if (currentUserId !== postOwnerId) { 
+                                    await db.collection('notifications').add({
+                                        type: 'like',
+                                        actorUserId: currentUserId,
+                                        targetUserId: postOwnerId, // Notify the actual post owner
+                                        postId: postId, 
+                                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                        read: false
+                                    });
+                                }
+                            }
+                            currentLikesSpan.textContent = `${currentLikes} likes`;
+                        } catch (error) {
+                            console.error("Error updating like on user profile:", error);
+                        }
+                    });
+                }
+            });
+            // Removed this line as count is updated by listenForTargetUserPostCount()
+            // userPostsCountSpan.textContent = querySnapshot.size; 
+        }
+
+        // --- View Single Post (same as profile.html, but ensures redirect to home.html) ---
+        function viewSinglePost(postId) {
+            window.location.href = `home.html?postId=${postId}`;
+        }
+
+        // Initial setup for the footer profile circle
+        updateFooterProfilePicture(null, 'P');
+        
+        // Footer navigation logic (same as profile.html)
+        document.addEventListener('DOMContentLoaded', () => {
+            const navItems = document.querySelectorAll('.footer .nav-item');
+            const homeLink = document.getElementById('homeLink');
+            const searchLink = document.getElementById('searchLink');
+            const createPostLink = document.getElementById('createPostLink');
+            const notificationsLink = document.getElementById('notificationsLink');
+            const profileLink = document.getElementById('profileLink');
+
+            function setActiveLink(clickedLink) {
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                    const profileCircle = item.querySelector('.profile-circle');
+                    if (profileCircle) {
+                        profileCircle.style.borderColor = 'transparent';
+                    }
+                });
+                clickedLink.classList.add('active');
+                const profileCircle = clickedLink.querySelector('.profile-circle');
+                if (profileCircle && profileCircle.classList.contains('has-image')) {
+                    profileCircle.style.borderColor = '#0095f6';
+                } else if (profileCircle) {
+                    profileCircle.style.borderColor = 'transparent';
+                }
+            }
+
+            const currentPath = window.location.pathname.split('/').pop();
+            // In user_profile.html, the 'profile' link should still highlight for the logged-in user's profile
+            // but for other users' profiles, the 'search' or 'home' link might be more appropriate depending on navigation flow.
+            // For now, if the path is user_profile.html, we don't set any specific footer link to active based on path name.
+            // If the user navigates to user_profile.html from 'search.html', 'search' would remain active.
+            // If user_profile.html is accessed directly, no active link will be set unless explicitly handled.
+            if (currentPath === 'search.html') {
+                setActiveLink(searchLink);
+            } else if (currentPath === 'create.html') {
+                setActiveLink(createPostLink);
+            } else if (currentPath === 'notifications.html') {
+                setActiveLink(notificationsLink);
+            } else if (currentPath === 'profile.html') { // This is for the *current user's* profile
+                setActiveLink(profileLink);
+            } else { // Default to home, or keep current active if none match
+                // If you want user_profile.html to default to 'home' as active:
+                // setActiveLink(homeLink);
+            }
+
+            navItems.forEach(item => {
+                item.addEventListener('click', function(event) {
+                    if (this.getAttribute('href') === '#' || this.classList.contains('active')) {
+                        // event.preventDefault(); // Only prevent default if you want to stop actual navigation
+                    }
+                    setActiveLink(this);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

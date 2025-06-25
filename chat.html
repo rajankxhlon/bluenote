@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Instagram Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Global Styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: #121212; /* Dark background */
+            color: #f5f5f5; /* Light text for dark theme */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            /* Prevent horizontal scrolling on mobile */
+            overflow-x: hidden;
+            width: 100vw;
+            max-width: 100vw;
+        }
+
+        /* Header */
+        .header {
+            background-color: #1a1a1a;
+            border-bottom: 1px solid #262626;
+            padding: 10px 15px; /* Adjusted padding for mobile */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+            box-sizing: border-box; /* Include padding in width */
+            flex-shrink: 0; /* Prevent header from shrinking */
+        }
+
+        @font-face {
+            font-family: 'Billabong';
+            src: url('https://raw.githubusercontent.com/s6n/instagram-font/master/Billabong.ttf') format('truetype');
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            flex-grow: 1; /* Allows it to take available space */
+            min-width: 0; /* Allow content to shrink */
+        }
+
+        .chat-header .back-btn {
+            font-size: 22px; /* Slightly smaller for mobile */
+            color: #f5f5f5;
+            margin-right: 12px; /* Adjusted margin */
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .chat-header .avatar {
+            width: 30px; /* Slightly smaller avatar */
+            height: 30px;
+            border-radius: 50%;
+            background-color: #b3b3b3;
+            margin-right: 10px;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 15px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .chat-header .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chat-header .username {
+            font-weight: bold;
+            color: #f5f5f5;
+            font-size: 16px; /* Slightly smaller font */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            flex-grow: 1; /* Allow username to take space and truncate */
+        }
+
+        .verified-badge {
+            width: 14px; /* Smaller badge */
+            height: 14px;
+            margin-left: 4px; /* Reduced margin */
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+
+        /* Main Chat Content */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Stick content to bottom */
+            padding: 0 10px; /* Reduced side padding for mobile */
+            overflow-y: auto; /* Enable scrolling for messages */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            padding-bottom: 70px; /* Space for input area */
+            min-height: calc(100vh - 50px - 70px); /* viewport height - header - input height */
+        }
+
+        .messages-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%; /* Take full width of main-content */
+            margin: 0 auto; /* No max-width here, flex item */
+            padding-top: 10px; /* Small padding at top of messages */
+        }
+
+        .message-bubble {
+            display: flex;
+            margin-bottom: 8px;
+            align-items: flex-end;
+            max-width: 85%; /* Slightly more width for mobile messages */
+        }
+
+        .message-bubble.sent {
+            align-self: flex-end; /* Sent messages on the right */
+            flex-direction: row-reverse; /* Avatar on the right, bubble on the left */
+        }
+
+        .message-bubble.received {
+            align-self: flex-start; /* Received messages on the left */
+            flex-direction: row; /* Avatar on the left, bubble on the right */
+        }
+
+        .message-content {
+            background-color: #363636;
+            padding: 9px 12px; /* Adjusted padding */
+            border-radius: 20px;
+            color: #f5f5f5;
+            font-size: 14px; /* Slightly smaller font */
+            position: relative;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .message-bubble.sent .message-content {
+            background-color: #0084ff; /* Instagram blue for sent messages */
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-bubble.received .message-content {
+            background-color: #262626;
+            border-bottom-left-radius: 4px;
+        }
+
+        /* --- MODIFICATION 1: Hide message avatars --- */
+        .message-avatar {
+            display: none; /* Hide all message avatars */
+        }
+        /* --- END MODIFICATION 1 --- */
+
+        /* Seen indicator */
+        .seen-indicator {
+            font-size: 10px; /* Smaller font */
+            color: #8e8e8e;
+            margin-top: 2px;
+            text-align: right;
+            padding-right: 5px;
+            flex-basis: 100%; /* Take full width below bubble */
+        }
+
+        /* Typing indicator */
+        .typing-indicator-container {
+            display: flex;
+            align-items: center;
+            /* Removed margin-left to align left like a received message */
+            margin-bottom: 8px; /* Space from other messages */
+            padding: 9px 12px; /* Match message bubble padding */
+            background-color: #262626; /* Match received message bubble color */
+            border-radius: 20px; /* Match message bubble border-radius */
+            max-width: 85%; /* Match message bubble width */
+            align-self: flex-start; /* Align to the left */
+            color: #8e8e8e;
+            font-size: 13px; /* Smaller font */
+            box-sizing: border-box; /* Include padding in width */
+            position: relative; /* For the little corner */
+            border-bottom-left-radius: 4px; /* Match message bubble corner */
+            margin-left: 10px; /* Adjust left margin to align with received messages */
+        }
+
+        /* --- MODIFICATION 2: Hide typing avatar and message text --- */
+        .typing-indicator-container .typing-avatar {
+            display: none; /* Hide typing avatar */
+        }
+
+        .typing-indicator-container .typing-message-text {
+            display: none; /* Hide the "Username is typing" text */
+        }
+        /* --- END MODIFICATION 2 --- */
+
+        .typing-indicator-container .dots {
+            display: inline-block;
+            font-size: 24px; /* Made dots larger */
+            animation: dot-animation 1.5s infinite linear;
+            line-height: 1; /* Adjust line height for vertical alignment */
+        }
+
+        @keyframes dot-animation {
+            0% { opacity: 0; transform: translateY(0); }
+            25% { opacity: 1; transform: translateY(-2px); }
+            50% { opacity: 0; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(0); }
+        }
+        .typing-indicator-container .dots::before { content: '.'; animation-delay: 0s; }
+        .typing-indicator-container .dots::after { content: '..'; animation-delay: 0.5s; }
+
+
+        /* Message Input Area - Integrated Send Icon */
+        .message-input-container {
+            background-color: #1a1a1a;
+            border-top: 1px solid #262626;
+            padding: 8px 15px; /* Adjusted padding */
+            display: flex;
+            align-items: center;
+            position: sticky;
+            bottom: 0;
+            width: 100%;
+            box-sizing: border-box;
+            flex-shrink: 0; /* Prevent input area from shrinking */
+        }
+
+        .message-input-wrapper {
+            flex-grow: 1;
+            position: relative; /* For positioning the send icon inside */
+            margin-right: 10px; /* Space from other potential icons */
+        }
+
+        .message-input-wrapper input[type="text"] {
+            width: 100%;
+            background-color: #262626;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 45px 10px 15px; /* Adjust right padding for icon */
+            color: #f5f5f5;
+            font-size: 15px; /* Default font size for input */
+            outline: none;
+            box-sizing: border-box; /* Include padding in width */
+            min-height: 40px; /* Ensure sufficient height */
+        }
+
+        .message-input-wrapper input[type="text"]::placeholder {
+            color: #8e8e8e;
+        }
+
+        .message-input-wrapper .send-icon {
+            position: absolute;
+            right: 15px; /* Position inside the box */
+            top: 50%;
+            transform: translateY(-50%);
+            color: #0095f6; /* Instagram blue */
+            font-size: 20px; /* Icon size */
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            pointer-events: auto; /* Ensure it's clickable */
+        }
+
+        .message-input-wrapper .send-icon.disabled {
+            color: #8e8e8e; /* Grayed out when disabled */
+            cursor: not-allowed;
+        }
+
+        /* Hide the separate button */
+        .message-input-container button#sendMessageBtn {
+            display: none;
+        }
+
+        /* Footer is intentionally hidden for chat page for full immersion */
+        .footer {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="chat-header">
+            <i class="fas fa-arrow-left back-btn" onclick="window.history.back()"></i>
+            <div class="avatar" id="targetUserAvatar"></div>
+            <span class="username" id="targetUsername"></span>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="messages-container" id="messagesContainer">
+            <p class="no-messages-message" id="loadingMessage">Loading messages...</p>
+        </div>
+        <div class="typing-indicator-container" id="typingIndicatorContainer" style="display: none;">
+            <span class="dots"></span>
+        </div>
+    </div>
+
+    <div class="message-input-container">
+        <div class="message-input-wrapper">
+            <input type="text" id="messageInput" placeholder="Message..." autocomplete="off">
+            <i class="fas fa-paper-plane send-icon" id="sendIcon"></i>
+        </div>
+        <button id="sendMessageBtn" style="display: none;"></button>
+    </div>
+
+    <div class="footer" style="display:none;"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-storage-compat.js"></script>
+
+    <script>
+        // Your Firebase project configuration (same as home.html and dm.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdu3d0_qEDZaXkBkJAO0VY0htme6_EMyM",
+            authDomain: "bluegram-27a79.firebaseapp.com",
+            databaseURL: "https://bluegram-27a79-default-rtdb.firebaseio.com",
+            projectId: "bluegram-27a79",
+            storageBucket: "bluegram-27a79.firebasestorage.app",
+            messagingSenderId: "780485443121",
+            appId: "1:780485443121:web:f7469d2264293fcbdf5f10",
+            measurementId: "G-YF5S9HK2Q5"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendIcon = document.getElementById('sendIcon'); // Reference to the send icon
+        const mainContent = document.getElementById('mainContent');
+        const targetUserAvatarDiv = document.getElementById('targetUserAvatar');
+        const targetUsernameSpan = document.getElementById('targetUsername');
+        const typingIndicatorContainer = document.getElementById('typingIndicatorContainer');
+        // --- MODIFICATION 4: Removed references to typingAvatarDiv and typingMessageSpan as they are no longer needed for their previous purpose ---
+        // const typingAvatarDiv = document.getElementById('typingAvatar');
+        // const typingMessageSpan = document.getElementById('typingMessage');
+        // --- END MODIFICATION 4 ---
+        const loadingMessage = document.getElementById('loadingMessage');
+
+        let currentUserId = null;
+        let currentUserData = null;
+        let targetUserId = null;
+        let targetUsername = '';
+        let targetUserPhotoUrl = null;
+        let targetUserIsVerified = false;
+        let chatId = null;
+
+        let typingTimeout = null;
+
+        const verifiedSVG = `<svg class="verified-badge" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 256 256" xml:space="preserve">
+            <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                <polygon points="45,6.18 57.06,0 64.41,11.38 77.94,12.06 78.62,25.59 90,32.94 83.82,45 90,57.06 78.62,64.41 77.94,77.94 64.41,78.62 57.06,90 45,83.82 32.94,90 25.59,78.62 12.06,77.94 11.38,64.41 0,57.06 6.18,45 0,32.94 11.38,25.59 12.06,12.06 25.59,11.38 32.94,0 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; fill: rgb(0,150,241); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+                <polygon points="40.16,58.47 26.24,45.08 29.7,41.48 40.15,51.52 61.22,31.08 64.7,34.67 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+            </g>
+        </svg>`;
+
+        // Helper function to generate chat ID
+        function generateChatId(user1Id, user2Id) {
+            return [user1Id, user2Id].sort().join('-');
+        }
+
+        // Function to update avatar display (only for header now)
+        function updateAvatar(element, photoUrl, username) {
+            element.innerHTML = '';
+            if (photoUrl) {
+                const img = document.createElement('img');
+                img.src = photoUrl;
+                img.alt = 'User Avatar';
+                element.appendChild(img);
+            } else {
+                const firstLetter = (username && username.length > 0) ? username.charAt(0).toUpperCase() : 'U';
+                element.textContent = firstLetter;
+            }
+        }
+
+        // Function to scroll to the bottom of the chat
+        function scrollToBottom() {
+            mainContent.scrollTop = mainContent.scrollHeight;
+        }
+
+        // --- Authentication and Initialization ---
+        auth.onAuthStateChanged(async (user) => {
+            console.log('Auth state changed. User:', user);
+            if (!user) {
+                console.log('No user logged in, redirecting to login.html');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            currentUserId = user.uid;
+            console.log('Current user ID:', currentUserId);
+
+            try {
+                const userDoc = await db.collection('users').doc(currentUserId).get();
+                if (!userDoc.exists) {
+                    console.error('Current user data not found in Firestore for UID:', currentUserId);
+                    messagesContainer.innerHTML = '<p class="no-messages-message">Error: Current user profile not found. Please ensure your user data exists in Firestore.</p>';
+                    loadingMessage.style.display = 'none';
+                    return;
+                }
+                currentUserData = userDoc.data();
+                console.log('Current user data:', currentUserData);
+
+                // Get target user ID from URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                targetUserId = urlParams.get('targetUserId');
+                targetUsername = urlParams.get('targetUsername') || 'Chat User';
+                console.log('Target User ID from URL:', targetUserId);
+                console.log('Target Username from URL:', targetUsername);
+
+                if (!targetUserId) {
+                    console.error('No target user ID provided in URL!');
+                    messagesContainer.innerHTML = '<p class="no-messages-message">Error: No chat user specified. Please navigate from the DM list.</p>';
+                    loadingMessage.style.display = 'none';
+                    return;
+                }
+
+                // Fetch target user data
+                const targetUserDoc = await db.collection('users').doc(targetUserId).get();
+                if (targetUserDoc.exists) {
+                    const data = targetUserDoc.data();
+                    targetUserPhotoUrl = data.profilePictureUrl;
+                    targetUserIsVerified = data.isVerified || false;
+                    console.log('Target user data loaded:', data);
+                } else {
+                    console.warn('Target user data not found in Firestore for UID:', targetUserId);
+                    // Fallback username and avatar if target user data doesn't exist
+                }
+
+                // Update header UI
+                updateAvatar(targetUserAvatarDiv, targetUserPhotoUrl, targetUsername);
+                targetUsernameSpan.innerHTML = `${targetUsername} ${targetUserIsVerified ? verifiedSVG : ''}`;
+
+                chatId = generateChatId(currentUserId, targetUserId);
+                console.log('Generated Chat ID:', chatId);
+
+                listenForMessages();
+                listenForTypingStatus();
+
+            } catch (error) {
+                console.error("Initialization error:", error);
+                messagesContainer.innerHTML = `<p class="no-messages-message">An error occurred during initialization: ${error.message}</p>`;
+                loadingMessage.style.display = 'none';
+            }
+        });
+
+        // --- Real-time Message Listener ---
+        function listenForMessages() {
+            loadingMessage.textContent = 'Loading messages...';
+            loadingMessage.style.display = 'block';
+            messagesContainer.innerHTML = ''; // Clear previous messages
+
+            // Ensure chatId is set before listening
+            if (!chatId) {
+                console.error('Chat ID is not defined, cannot listen for messages.');
+                loadingMessage.style.display = 'none';
+                messagesContainer.innerHTML = '<p class="no-messages-message">Cannot load messages: Chat ID missing.</p>';
+                return;
+            }
+
+            console.log('Listening for messages in chat:', chatId);
+            db.collection('chats').doc(chatId).collection('messages')
+                .orderBy('timestamp', 'asc') // Order messages by time
+                .onSnapshot(async (snapshot) => {
+                    loadingMessage.style.display = 'none'; // Hide loading once data starts coming
+
+                    if (snapshot.empty && messagesContainer.children.length === 0) {
+                        messagesContainer.innerHTML = '<p class="no-messages-message">Say hi! No messages yet.</p>';
+                        console.log('No messages found in chat.');
+                        return; // Exit if no messages and nothing to process
+                    }
+
+                    const currentMessageElements = Array.from(messagesContainer.children).filter(el => el.classList.contains('message-bubble') || el.classList.contains('seen-indicator'));
+                    const existingMessageIds = new Set(Array.from(messagesContainer.children).filter(el => el.classList.contains('message-bubble')).map(el => el.dataset.messageid));
+
+                    snapshot.docChanges().forEach(change => {
+                        const message = change.doc.data();
+                        const messageId = change.doc.id;
+                        console.log(`Firestore change type: ${change.type}, Message ID: ${messageId}`, message);
+
+                        if (change.type === 'added' && !existingMessageIds.has(messageId)) {
+                            displayMessage(message, messageId);
+                            // Mark message as seen by current user if it's a received message
+                            if (message.senderId !== currentUserId && (!message.seenBy || !message.seenBy.includes(currentUserId))) {
+                                db.collection('chats').doc(chatId).collection('messages').doc(messageId).update({
+                                    seenBy: firebase.firestore.FieldValue.arrayUnion(currentUserId)
+                                }).then(() => {
+                                    console.log(`Message ${messageId} marked as seen by ${currentUserId}`);
+                                }).catch(e => console.error(`Error marking message ${messageId} as seen:`, e));
+                            }
+                        } else if (change.type === 'modified') {
+                            // Update existing message if its `seenBy` array changes
+                            const existingMessageElement = messagesContainer.querySelector(`[data-messageid="${messageId}"]`);
+                            if (existingMessageElement) {
+                                updateMessageSeenStatus(existingMessageElement, message, currentUserId);
+                            }
+                        } else if (change.type === 'removed') {
+                            // Handle message removal (optional)
+                            const removedElement = messagesContainer.querySelector(`[data-messageid="${messageId}"]`);
+                            if (removedElement) {
+                                removedElement.remove();
+                                // Also remove any associated seen indicator
+                                if (removedElement.nextElementSibling && removedElement.nextElementSibling.classList.contains('seen-indicator')) {
+                                    removedElement.nextElementSibling.remove();
+                                }
+                            }
+                        }
+                    });
+
+                    // Ensure "No messages yet" is hidden if messages are loaded
+                    if (!snapshot.empty && messagesContainer.querySelector('.no-messages-message')) {
+                         messagesContainer.querySelector('.no-messages-message').style.display = 'none';
+                    }
+                    scrollToBottom();
+                }, (error) => {
+                    console.error("Error listening for messages:", error);
+                    messagesContainer.innerHTML = '<p class="no-messages-message">Error loading messages. Check console for details.</p>';
+                    loadingMessage.style.display = 'none';
+                });
+        }
+
+        // --- Display Single Message ---
+        function displayMessage(message, messageId) {
+            const isSentByCurrentUser = message.senderId === currentUserId;
+
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('message-bubble');
+            messageBubble.classList.add(isSentByCurrentUser ? 'sent' : 'received');
+            messageBubble.dataset.messageid = messageId; // Store message ID for updates
+
+            const messageContent = document.createElement('div');
+            messageContent.classList.add('message-content');
+            messageContent.textContent = message.text;
+
+            // --- MODIFICATION 5: Removed message avatar creation logic from here as well ---
+            // const messageAvatar = document.createElement('div');
+            // messageAvatar.classList.add('message-avatar');
+            // if (!isSentByCurrentUser) {
+            //     updateAvatar(messageAvatar, targetUserPhotoUrl, targetUsername);
+            // } else {
+            //     messageAvatar.style.display = 'none'; // Hide avatar for sent messages by default
+            // }
+            // --- END MODIFICATION 5 ---
+
+            if (isSentByCurrentUser) {
+                messageBubble.appendChild(messageContent);
+                // messageBubble.appendChild(messageAvatar); // Removed
+            } else {
+                // messageBubble.appendChild(messageAvatar); // Removed
+                messageBubble.appendChild(messageContent);
+            }
+
+            messagesContainer.appendChild(messageBubble);
+
+            if (isSentByCurrentUser) {
+                updateMessageSeenStatus(messageBubble, message, currentUserId);
+            }
+        }
+
+        function updateMessageSeenStatus(messageElement, messageData, currentUserId) {
+            const isSentByCurrentUser = messageData.senderId === currentUserId;
+
+            // Only show seen indicator for messages sent by the current user
+            if (!isSentByCurrentUser) {
+                // Ensure no seen indicator is left over for received messages
+                let existingSeenIndicator = messageElement.nextElementSibling;
+                if (existingSeenIndicator && existingSeenIndicator.classList.contains('seen-indicator')) {
+                    existingSeenIndicator.remove();
+                }
+                return;
+            }
+
+            let seenIndicator = messageElement.nextElementSibling;
+            if (!seenIndicator || !seenIndicator.classList.contains('seen-indicator')) {
+                seenIndicator = document.createElement('div');
+                seenIndicator.classList.add('seen-indicator');
+                messageElement.parentNode.insertBefore(seenIndicator, messageElement.nextSibling);
+            }
+
+            const seenByTarget = messageData.seenBy && messageData.seenBy.includes(targetUserId);
+            if (seenByTarget) {
+                seenIndicator.textContent = 'Seen';
+            } else {
+                seenIndicator.textContent = ''; // Clear if not seen (or "Delivered")
+            }
+        }
+
+        // --- Send Message Logic ---
+        // Change from sendMessageBtn to sendIcon for click event
+        sendIcon.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            // Check if icon is disabled (no text)
+            if (sendIcon.classList.contains('disabled') || !currentUserId || !targetUserId || !chatId) {
+                console.warn('Attempted to send empty message or missing chat info.');
+                return;
+            }
+
+            messageInput.value = ''; // Clear input immediately
+            sendIcon.classList.add('disabled'); // Disable icon
+
+            try {
+                // Ensure chat document exists, participants array is crucial for security rules
+                await db.collection('chats').doc(chatId).set({
+                    participants: [currentUserId, targetUserId],
+                    lastMessageTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastMessageText: text
+                }, { merge: true }); // Use merge to not overwrite other fields if doc exists
+                console.log('Chat document ensured/updated.');
+
+                await db.collection('chats').doc(chatId).collection('messages').add({
+                    senderId: currentUserId,
+                    text: text,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    seenBy: [currentUserId] // Sender has seen their own message
+                });
+                console.log('Message sent successfully!');
+                // Reset typing status after sending
+                await setTypingStatus(false);
+            } catch (error) {
+                console.error("Error sending message:", error);
+                alert(`Failed to send message: ${error.message}. Please check console.`);
+            } finally {
+                // The input 'input' listener will re-enable the icon if text is typed
+                // But for safety if no more text, ensure it stays disabled
+                if (messageInput.value.trim() === '') {
+                    sendIcon.classList.add('disabled');
+                }
+                scrollToBottom();
+            }
+        }
+
+        // --- Typing Indicator Logic ---
+        messageInput.addEventListener('input', () => {
+            if (!currentUserId || !chatId) return;
+
+            // Enable/disable send icon based on input value
+            if (messageInput.value.trim() === '') {
+                sendIcon.classList.add('disabled');
+            } else {
+                sendIcon.classList.remove('disabled');
+            }
+
+            setTypingStatus(true);
+
+            // Clear any existing timeout
+            if (typingTimeout) {
+                clearTimeout(typingTimeout);
+            }
+
+            // Set a new timeout to set typing status to false after a delay
+            typingTimeout = setTimeout(() => {
+                setTypingStatus(false);
+            }, 1500); // 1.5 seconds after last input
+        });
+
+        async function setTypingStatus(isTyping) {
+            if (!currentUserId) return;
+            try {
+                const userRef = db.collection('users').doc(currentUserId);
+                await userRef.update({
+                    typingInChat: isTyping ? chatId : null
+                });
+                console.log(`Typing status set to: ${isTyping ? 'typing in ' + chatId : 'not typing'}`);
+            } catch (error) {
+                console.error("Error setting typing status:", error);
+            }
+        }
+
+        function listenForTypingStatus() {
+            if (!targetUserId) return;
+
+            const targetUserRef = db.collection('users').doc(targetUserId);
+            console.log('Listening for typing status of target user:', targetUserId);
+            targetUserRef.onSnapshot((doc) => {
+                if (doc.exists) {
+                    const userData = doc.data();
+                    const isTargetTyping = userData.typingInChat === chatId;
+                    console.log(`Target user ${targetUserId} typing status: ${isTargetTyping ? 'typing' : 'not typing'} in chat ${userData.typingInChat}`);
+                    if (isTargetTyping) {
+                        // --- MODIFICATION 6: Removed setting avatar and text, just show the container ---
+                        typingIndicatorContainer.style.display = 'flex';
+                        // --- END MODIFICATION 6 ---
+                        scrollToBottom(); // Scroll down when typing starts
+                    } else {
+                        typingIndicatorContainer.style.display = 'none';
+                    }
+                } else {
+                    console.warn('Target user document does not exist for typing status listener:', targetUserId);
+                }
+            }, (error) => {
+                console.error("Error listening for typing status:", error);
+            });
+        }
+
+        // --- Handle user leaving the page (important for typing status cleanup) ---
+        window.addEventListener('beforeunload', async () => {
+            if (currentUserId && chatId) {
+                // Set typing status to null when user leaves/closes tab
+                await setTypingStatus(false);
+            }
+        });
+
+        // Initial state of the send icon
+        sendIcon.classList.add('disabled');
+
+    </script>
+</body>
+</html>

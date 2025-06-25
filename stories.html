@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden; /* Hide scrollbars */
+            font-family: -apple-system, BlinkMacMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #fff;
+        }
+
+        .story-display-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .story-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain; /* Ensure the image fits within the viewport */
+            display: block;
+        }
+
+        .story-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .story-header .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #b3b3b3;
+            margin-right: 12px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+            border: 2px solid #fff;
+        }
+
+        .story-header .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .story-header .username {
+            font-weight: bold;
+            font-size: 16px;
+            color: #f5f5f5;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Adjusted verified-badge for general use including viewers list */
+        .verified-badge {
+            width: 18px;
+            height: 18px;
+            margin-left: 6px;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: #fff;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 11;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+
+        .close-button:hover {
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .story-options {
+            position: absolute;
+            top: 15px;
+            right: 70px; /* Positioned to the left of the close button */
+            z-index: 11;
+            cursor: pointer;
+            font-size: 26px;
+            color: #fff;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+
+        .story-options:hover {
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .story-options-menu {
+            position: absolute;
+            top: 55px; /* Below the three dots icon */
+            right: 0; /* Aligned with the right edge of the three dots icon's parent */
+            background-color: #363636;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            z-index: 12; /* Higher than options icon */
+            min-width: 120px;
+            display: none; /* Hidden by default */
+            overflow: hidden;
+        }
+
+        .story-options-menu.active {
+            display: block;
+        }
+
+        .story-options-menu button {
+            background: none;
+            border: none;
+            color: #f5f5f5;
+            padding: 10px 15px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+        .story-options-menu button:hover {
+            background-color: #4a4a4a;
+        }
+
+        .story-options-menu button.delete {
+            color: #ed4956;
+            font-weight: bold;
+        }
+
+        /* Styles for Story Viewers at the bottom */
+        .story-viewer-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Center horizontally */
+            color: #fff;
+            font-size: 15px;
+            z-index: 10;
+            cursor: pointer;
+            box-sizing: border-box;
+            transition: background-color 0.2s ease;
+        }
+
+        .story-viewer-info:hover {
+            background-color: rgba(0,0,0,0.8);
+        }
+
+        .story-viewer-info i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        /* Story Viewers Modal */
+        .viewers-modal {
+            display: none;
+            position: fixed;
+            z-index: 3000; /* Higher than story modal */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .viewers-modal-content {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80%;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .viewers-modal-content h3 {
+            margin-top: 0;
+            color: #f5f5f5;
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #262626;
+            padding-bottom: 10px;
+        }
+
+        .viewers-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .viewer-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #262626;
+        }
+
+        .viewer-item:last-child {
+            border-bottom: none;
+        }
+
+        .viewer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #b3b3b3;
+            margin-right: 15px;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .viewer-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .viewer-username {
+            font-weight: bold;
+            color: #f5f5f5;
+            flex-grow: 1;
+            display: flex; /* To align username and tick */
+            align-items: center;
+        }
+
+        .viewer-timestamp {
+            font-size: 12px;
+            color: #8e8e8e;
+            margin-left: auto; /* Push to the right */
+            white-space: nowrap;
+        }
+
+        .viewers-modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: #f5f5f5;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Responsive Adjustments for Story Page */
+        @media (max-width: 768px) {
+            .story-header {
+                padding: 10px;
+            }
+            .story-header .avatar {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+                margin-right: 10px;
+            }
+            .story-header .username {
+                font-size: 15px;
+            }
+            .verified-badge {
+                width: 16px;
+                height: 16px;
+            }
+            .close-button, .story-options {
+                font-size: 26px;
+                width: 32px;
+                height: 32px;
+                top: 10px;
+            }
+            .close-button {
+                right: 15px;
+            }
+            .story-options {
+                right: 60px;
+            }
+            .story-viewer-info {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .story-viewer-info i {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .story-header .avatar {
+                width: 30px;
+                height: 30px;
+                font-size: 16px;
+                margin-right: 8px;
+            }
+            .story-header .username {
+                font-size: 14px;
+            }
+            .verified-badge {
+                width: 14px;
+                height: 14px;
+            }
+            .close-button, .story-options {
+                font-size: 22px;
+                width: 28px;
+                height: 28px;
+                top: 8px;
+            }
+            .close-button {
+                right: 10px;
+            }
+            .story-options {
+                right: 50px;
+            }
+            .story-viewer-info {
+                padding: 10px;
+                font-size: 13px;
+            }
+            .story-viewer-info i {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="story-display-container">
+        <img src="" alt="Story Image" class="story-image" id="storyImage">
+
+        <div class="story-header">
+            <div class="avatar" id="storyAvatar"></div>
+            <span class="username" id="storyUsername"></span>
+        </div>
+
+        <span class="close-button" id="closeStory">&times;</span>
+
+        <div class="story-options" id="storyOptionsIcon" style="display: none;">
+            <i class="fas fa-ellipsis-h"></i>
+            <div class="story-options-menu" id="storyOptionsMenu">
+                <button class="delete-story-btn delete">Delete</button>
+            </div>
+        </div>
+
+        <div class="story-viewer-info" id="storyViewerInfo" style="display: none;">
+            <i class="far fa-eye"></i>
+            <span id="storyViewerCount">0 views</span>
+        </div>
+    </div>
+
+    <div id="viewersModal" class="viewers-modal">
+        <div class="viewers-modal-content">
+            <span class="viewers-modal-close" id="viewersModalClose">&times;</span>
+            <h3>Viewers</h3>
+            <ul class="viewers-list" id="viewersList">
+                </ul>
+            <p class="no-viewers-message" style="display:none; text-align:center; color:#8e8e8e;">No one has viewed this story yet.</p>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-storage-compat.js"></script>
+
+    <script>
+        // SVG for the verified badge (moved to top of script)
+        const verifiedSVG = `<svg class="verified-badge" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 256 256" xml:space="preserve">
+            <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                <polygon points="45,6.18 57.06,0 64.41,11.38 77.94,12.06 78.62,25.59 90,32.94 83.82,45 90,57.06 78.62,64.41 77.94,77.94 64.41,78.62 57.06,90 45,83.82 32.94,90 25.59,78.62 12.06,77.94 11.38,64.41 0,57.06 6.18,45 0,32.94 11.38,25.59 12.06,12.06 25.59,11.38 12.06,12.06 25.59,11.38 32.94,0 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; fill: rgb(0,150,241); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+                <polygon points="40.16,58.47 26.24,45.08 29.7,41.48 40.15,51.52 61.22,31.08 64.7,34.67 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+            </g>
+        </svg>`;
+
+        // Your Firebase project configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdu3d0_qEDZaXkBkJAO0VY0htme6_EMyM",
+            authDomain: "bluegram-27a79.firebaseapp.com",
+            databaseURL: "https://bluegram-27a79-default-rtdb.firebaseio.com",
+            projectId: "bluegram-27a79",
+            storageBucket: "bluegram-27a79.firebasestorage.app",
+            messagingSenderId: "780485443121",
+            appId: "1:780485443121:web:f7469d2264293fcbdf5f10",
+            measurementId: "G-YF5S9HK2Q5"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        let currentUserId = null; // Will be set after auth state changes
+
+        // Elements from stories.html
+        const storyImage = document.getElementById('storyImage');
+        const storyUsernameElem = document.getElementById('storyUsername');
+        const storyAvatarElem = document.getElementById('storyAvatar');
+        const closeStoryButton = document.getElementById('closeStory');
+        const storyOptionsIcon = document.getElementById('storyOptionsIcon');
+        const storyOptionsMenu = document.getElementById('storyOptionsMenu');
+        const deleteStoryBtn = storyOptionsMenu.querySelector('.delete-story-btn');
+        const storyViewerInfo = document.getElementById('storyViewerInfo');
+        const storyViewerCount = document.getElementById('storyViewerCount');
+        const viewersModal = document.getElementById('viewersModal');
+        const viewersModalClose = document.getElementById('viewersModalClose');
+        const viewersList = document.getElementById('viewersList');
+        const noViewersMessage = document.querySelector('#viewersModal .no-viewers-message');
+
+        let currentStoryId = null; // To store the ID of the story being viewed
+        let storyOwnerId = null; // To store the ID of the user who posted the story
+
+        // Function to mark a story as seen by the current user
+        async function markStoryAsSeen(storyId, viewerId) {
+            if (!viewerId) return; // Cannot mark as seen without a viewer ID
+
+            try {
+                // Use a subcollection for seen status for better scalability
+                const seenRef = db.collection('stories').doc(storyId).collection('seenBy').doc(viewerId);
+                await seenRef.set({
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log(`Story ${storyId} marked as seen by ${viewerId}`);
+            } catch (error) {
+                console.error("Error marking story as seen:", error);
+            }
+        }
+
+        async function deleteStory(storyId, imageUrl) {
+            if (!confirm('Are you sure you want to delete this story?')) {
+                return;
+            }
+
+            try {
+                // Delete story document from Firestore
+                await db.collection('stories').doc(storyId).delete();
+                console.log('Story document deleted from Firestore:', storyId);
+
+                // Optionally, delete image from storage if it's a Firebase Storage URL (ImgBB URLs don't need this)
+                if (imageUrl && imageUrl.includes('firebasestorage.googleapis.com')) {
+                    try {
+                        const imageRef = storage.refFromURL(imageUrl);
+                        await imageRef.delete();
+                        console.log('Story image deleted from Firebase Storage:', imageUrl);
+                    } catch (storageError) {
+                        console.warn('Could not delete story image from Firebase Storage (might be from ImgBB or already deleted):', storageError);
+                    }
+                } else if (imageUrl) {
+                    console.log('Story image is likely from ImgBB, not deleting from Firebase Storage:', imageUrl);
+                }
+
+                alert('Story deleted successfully!');
+                window.location.href = 'home.html'; // Go back to home page after deletion
+            } catch (error) {
+                console.error("Error deleting story:", error);
+                alert('Failed to delete story. Please try again.');
+            }
+        }
+
+        // Function to fetch story viewers
+        async function fetchStoryViewers(storyId) {
+            viewersList.innerHTML = ''; // Clear previous list
+            noViewersMessage.style.display = 'none'; // Hide no viewers message
+
+            try {
+                const seenBySnapshot = await db.collection('stories').doc(storyId).collection('seenBy').get();
+                if (seenBySnapshot.empty) {
+                    noViewersMessage.style.display = 'block';
+                    return;
+                }
+
+                const viewerIds = seenBySnapshot.docs.map(doc => doc.id);
+                const viewerPromises = viewerIds.map(id => db.collection('users').doc(id).get());
+                const viewerDocs = await Promise.all(viewerPromises);
+
+                let hasViewers = false;
+                viewerDocs.forEach(userDoc => {
+                    if (userDoc.exists) {
+                        hasViewers = true;
+                        const viewerData = userDoc.data();
+                        const viewerUserId = userDoc.id;
+                        let viewerUsername = viewerData.username || 'Unknown User';
+                        let viewerProfilePictureUrl = viewerData.profilePictureUrl || '';
+                        const isViewerVerified = viewerData.isVerified === true; // Check if the viewer is verified
+
+                        const seenTimestamp = seenBySnapshot.docs.find(doc => doc.id === viewerUserId)?.data().timestamp;
+
+                        let viewerAvatarHtml = '';
+                        if (viewerProfilePictureUrl) {
+                            viewerAvatarHtml = `<img src="${viewerProfilePictureUrl}" alt="${viewerUsername}">`;
+                        } else {
+                            const firstLetter = (viewerUsername && viewerUsername.length > 0) ? viewerUsername.charAt(0).toUpperCase() : 'U';
+                            viewerAvatarHtml = `<span>${firstLetter}</span>`;
+                        }
+
+                        const listItem = document.createElement('li');
+                        listItem.classList.add('viewer-item');
+                        listItem.innerHTML = `
+                            <div class="viewer-avatar">${viewerAvatarHtml}</div>
+                            <span class="viewer-username">
+                                ${viewerUsername}
+                                ${isViewerVerified ? verifiedSVG : ''} </span>
+                            ${seenTimestamp ? `<span class="viewer-timestamp">${formatTimeAgo(new Date(seenTimestamp.toDate()))}</span>` : ''}
+                        `;
+                        viewersList.appendChild(listItem);
+                    }
+                });
+
+                if (!hasViewers) {
+                    noViewersMessage.style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error("Error fetching story viewers:", error);
+                noViewersMessage.style.display = 'block';
+                noViewersMessage.textContent = 'Error loading viewers.';
+            }
+        }
+
+        // Function to format timestamp for display (e.g., "5 hours ago", "Yesterday", "June 22, 2025")
+        function formatTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + " years ago";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + " months ago";
+            interval = seconds / 86400;
+            if (interval > 1) {
+                if (Math.floor(interval) === 1) return "Yesterday";
+                return Math.floor(interval) + " days ago";
+            }
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + " hours ago";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + " minutes ago";
+            return Math.floor(seconds) + " seconds ago";
+        }
+
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check if user is logged in
+            auth.onAuthStateChanged(async (user) => {
+                if (!user) {
+                    console.log('No user logged in, redirecting to login.html');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                currentUserId = user.uid;
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const imageUrl = urlParams.get('imageUrl');
+                const username = decodeURIComponent(urlParams.get('username'));
+                const profilePictureUrl = decodeURIComponent(urlParams.get('profilePictureUrl'));
+                const isVerified = urlParams.get('isVerified') === 'true';
+                const storyId = urlParams.get('storyId');
+                const isYourStory = urlParams.get('isYourStory') === 'true';
+
+                if (!imageUrl) {
+                    alert('No story found.');
+                    window.location.href = 'home.html';
+                    return;
+                }
+
+                storyImage.src = imageUrl;
+                storyUsernameElem.innerHTML = `
+                    <span>${username}</span>
+                    ${isVerified ? verifiedSVG : ''}
+                `;
+
+                storyAvatarElem.innerHTML = '';
+                if (profilePictureUrl) {
+                    storyAvatarElem.innerHTML = `<img src="${profilePictureUrl}" alt="${username} avatar">`;
+                } else {
+                    storyAvatarElem.textContent = (username && username.length > 0) ? username.charAt(0).toUpperCase() : 'U';
+                }
+
+                currentStoryId = storyId; // Set the global currentStoryId
+                // We need to fetch the story document to get the userId (story owner)
+                if (storyId) {
+                    const storyDoc = await db.collection('stories').doc(storyId).get();
+                    if (storyDoc.exists) {
+                        storyOwnerId = storyDoc.data().userId;
+                    }
+                }
+
+                // Mark the story as seen by the current user (if not their own story)
+                if (storyId && currentUserId && !isYourStory) {
+                    await markStoryAsSeen(storyId, currentUserId);
+                }
+
+                // Show/hide story options and viewer info based on whether it's the current user's story
+                if (isYourStory) {
+                    storyOptionsIcon.style.display = 'flex'; // Show three dots
+                    storyViewerInfo.style.display = 'flex'; // Show eye icon for your story
+                    // Fetch and update viewer count immediately for your story
+                    if (currentStoryId) {
+                        db.collection('stories').doc(currentStoryId).collection('seenBy')
+                            .onSnapshot(snapshot => {
+                                const viewerCount = snapshot.size;
+                                storyViewerCount.textContent = `${viewerCount} view${viewerCount === 1 ? '' : 's'}`;
+                            }, (error) => {
+                                console.error("Error fetching real-time viewer count:", error);
+                            });
+                    }
+                } else {
+                    storyOptionsIcon.style.display = 'none'; // Hide for other users' stories
+                    storyViewerInfo.style.display = 'none'; // Hide eye icon for others' stories
+                }
+
+                // Event listener for the story options (three dots) icon
+                storyOptionsIcon.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    storyOptionsMenu.classList.toggle('active');
+                });
+
+                // Event listener for the delete story button
+                deleteStoryBtn.addEventListener('click', () => {
+                    if (currentStoryId && storyOwnerId === currentUserId) { // Only allow deletion if current user owns the story
+                        deleteStory(currentStoryId, imageUrl);
+                    } else {
+                        alert('You do not have permission to delete this story.');
+                    }
+                    storyOptionsMenu.classList.remove('active');
+                });
+
+                // Close the story options menu when clicking anywhere else
+                document.addEventListener('click', (event) => {
+                    if (!storyOptionsIcon.contains(event.target) && !storyOptionsMenu.contains(event.target)) {
+                        storyOptionsMenu.classList.remove('active');
+                    }
+                });
+
+                // Event listener for the story viewer info (eye icon)
+                storyViewerInfo.addEventListener('click', async () => {
+                    if (currentStoryId) {
+                        await fetchStoryViewers(currentStoryId);
+                        viewersModal.style.display = 'flex'; // Show the viewers modal
+                    }
+                });
+
+                // Close viewers modal when close button is clicked
+                viewersModalClose.addEventListener('click', () => {
+                    viewersModal.style.display = 'none';
+                });
+
+                // Close viewers modal when clicking outside the content
+                viewersModal.addEventListener('click', (event) => {
+                    if (event.target === viewersModal) {
+                        viewersModal.style.display = 'none';
+                    }
+                });
+
+                // Close story page (go back to home)
+                closeStoryButton.addEventListener('click', () => {
+                    window.location.href = 'home.html';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

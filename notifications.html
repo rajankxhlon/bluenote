@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Global Styles (Copy from home.html or create a shared CSS file) */
+        body {
+            font-family: -apple-system, BlinkMacMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: #121212; /* Dark background */
+            color: #f5f5f5; /* Light text for dark theme */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header (Copy from home.html) */
+        .header {
+            background-color: #1a1a1a;
+            border-bottom: 1px solid #262626;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header .logo {
+            font-family: 'Billabong', cursive;
+            font-size: 28px;
+            color: #f5f5f5;
+            text-decoration: none;
+        }
+
+        @font-face {
+            font-family: 'Billabong';
+            src: url('https://raw.githubusercontent.com/s6n/instagram-font/master/Billabong.ttf') format('truetype');
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            padding: 20px 15px; /* Adjusted padding for better mobile fit */
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+
+        .notifications-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .notifications-container h2 {
+            color: #f5f5f5;
+            margin-bottom: 20px;
+            font-size: 28px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: center;
+            background-color: #262626;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 15px;
+            color: #f5f5f5;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s ease;
+            /* cursor: pointer; */ /* Removed from here as only parts might be clickable */
+        }
+
+        .notification-item:hover {
+            background-color: #333333;
+        }
+
+        .notification-item.unread {
+            background-color: #004d77; /* A subtle blue for unread notifications */
+        }
+
+        .notification-item .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #b3b3b3;
+            margin-right: 12px;
+            flex-shrink: 0; /* Prevent avatar from shrinking */
+            overflow: hidden;
+            display: flex; /* For first letter fallback */
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer; /* Make avatar clickable */
+        }
+
+        .notification-item .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .notification-content {
+            flex-grow: 1;
+            display: flex; /* Use flexbox for content to align items */
+            align-items: center; /* Vertically align items */
+            flex-wrap: wrap; /* Allow wrapping for long messages */
+            /* cursor: pointer; */ /* Removed from here as specific elements are clickable */
+        }
+
+        .notification-content .username {
+            font-weight: bold;
+            color: #f5f5f5;
+            margin-right: 5px;
+            cursor: pointer; /* Make username clickable */
+        }
+
+        .notification-content .verified-badge {
+            color: #0095f6; /* Instagram blue for tick */
+            font-size: 14px;
+            margin-left: 4px; /* Space between username and tick */
+            margin-right: 8px; /* Space between tick and rest of message */
+            display: inline-block; /* Ensure it stays in line with text */
+        }
+
+        .notification-timestamp {
+            font-size: 12px;
+            color: #8e8e8e;
+            margin-left: auto; /* Push timestamp to the right */
+            white-space: nowrap; /* Prevent wrapping */
+        }
+
+        .no-notifications-message {
+            text-align: center;
+            padding: 30px 15px;
+            font-size: 16px;
+            color: #b3b3b3;
+        }
+
+        .follow-button-container {
+            margin-left: 15px; /* Space from the text */
+            flex-shrink: 0; /* Prevent button from shrinking */
+        }
+
+        .follow-button {
+            background-color: #0095f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            white-space: nowrap; /* Prevent button text from wrapping */
+        }
+
+        .follow-button:hover {
+            background-color: #007bb5;
+        }
+
+        .follow-button.following {
+            background-color: #333333; /* Grey for following state */
+            color: #f5f5f5;
+            border: 1px solid #555555;
+        }
+
+        .follow-button.following:hover {
+            background-color: #444444;
+        }
+
+        /* NEW: Collaboration Request Button Styles */
+        .collaboration-actions {
+            margin-left: 15px;
+            flex-shrink: 0;
+            display: flex;
+            gap: 8px; /* Space between buttons */
+        }
+
+        .collab-button {
+            background-color: #0095f6; /* Blue for accept */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .collab-button.accept-collab:hover {
+            background-color: #007bb5;
+        }
+
+        .collab-button.reject-collab {
+            background-color: #dc3545; /* Red for reject */
+        }
+
+        .collab-button.reject-collab:hover {
+            background-color: #c82333;
+        }
+
+        .collab-button.accepted,
+        .collab-button.rejected {
+            background-color: #333333; /* Grey for disabled state */
+            color: #f5f5f5;
+            border: 1px solid #555555;
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        .collab-button.accepted:hover,
+        .collab-button.rejected:hover {
+            background-color: #333333;
+        }
+
+
+        /* Footer Navigation (Copy from home.html) */
+        .footer {
+            background-color: #1a1a1a;
+            border-top: 1px solid #262626;
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: sticky;
+            bottom: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .footer .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #f5f5f5;
+            font-size: 22px;
+            transition: color 0.2s ease;
+            flex-basis: 20%;
+            text-align: center;
+        }
+
+        .footer .nav-item i {
+            margin-bottom: 3px;
+        }
+
+        /* Profile picture in footer */
+        .footer .profile-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: #b3b3b3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            overflow: hidden;
+            margin-bottom: 3px;
+            border: 2px solid transparent; /* Default border */
+        }
+
+        .footer .profile-circle.has-image {
+            border-color: #f5f5f5; /* White border for active user profile image */
+        }
+
+        .footer .profile-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+
+        .footer .nav-item.active {
+            color: #0095f6;
+        }
+
+        .footer .nav-item:hover {
+            color: #8e8e8e;
+        }
+
+        /* Active profile circle border for active state */
+        .footer .nav-item.active .profile-circle {
+            border-color: #0095f6; /* Blue border when active */
+        }
+
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+            .header .logo {
+                font-size: 24px;
+            }
+            .main-content {
+                padding: 15px;
+            }
+            .notifications-container {
+                padding: 15px;
+            }
+            .notifications-container h2 {
+                font-size: 24px;
+            }
+            .notification-item {
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+            .notification-item .avatar {
+                width: 30px;
+                height: 30px;
+                margin-right: 10px;
+            }
+            .footer .nav-item {
+                font-size: 20px;
+            }
+            .footer .profile-circle {
+                width: 26px;
+                height: 26px;
+                font-size: 15px;
+            }
+            .notification-content .verified-badge {
+                font-size: 12px;
+            }
+            .follow-button,
+            .collab-button {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header .logo {
+                font-size: 22px;
+            }
+            .main-content {
+                padding: 10px;
+            }
+            .notifications-container {
+                padding: 10px;
+            }
+            .notifications-container h2 {
+                font-size: 22px;
+                margin-bottom: 15px;
+            }
+            .notification-item {
+                font-size: 13px;
+                padding: 8px 10px;
+            }
+            .notification-item .avatar {
+                width: 28px;
+                height: 28px;
+                margin-right: 8px;
+            }
+            .notification-timestamp {
+                font-size: 11px;
+            }
+            .footer .nav-item {
+                font-size: 18px;
+            }
+            .footer .profile-circle {
+                width: 24px;
+                height: 24px;
+                font-size: 14px;
+            }
+            .notification-content .verified-badge {
+                font-size: 11px;
+            }
+            .follow-button,
+            .collab-button {
+                padding: 5px 8px;
+                font-size: 12px;
+            }
+            .collaboration-actions {
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="home.html" class="logo">Bluenote</a>
+    </div>
+
+    <div class="main-content">
+        <div class="notifications-container" id="notificationsContainer">
+            <h2>Notifications</h2>
+            <p class="no-notifications-message" id="loadingMessage">Loading notifications...</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <a href="home.html" class="nav-item" id="homeLink">
+            <i class="fas fa-home"></i>
+        </a>
+        <a href="search.html" class="nav-item" id="searchLink">
+            <i class="fas fa-search"></i>
+        </a>
+        <a href="create.html" class="nav-item" id="createPostLink">
+            <i class="fas fa-plus-square"></i>
+        </a>
+        <a href="notifications.html" class="nav-item active" id="notificationsLink">
+            <i class="fas fa-heart"></i>
+        </a>
+        <a href="profile.html" class="nav-item" id="profileLink">
+            <div class="profile-circle" id="footerProfileCircle">
+            </div>
+        </a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore-compat.js"></script>
+    <script>
+        // Your Firebase project configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdu3d0_qEDZaXkBkJAO0VY0htme6_EMyM",
+            authDomain: "bluegram-27a79.firebaseapp.com",
+            databaseURL: "https://bluegram-27a79-default-rtdb.firebaseio.com",
+            projectId: "bluegram-27a79",
+            storageBucket: "bluegram-27a79.firebasestorage.app",
+            messagingSenderId: "780485443121",
+            appId: "1:780485443121:web:f7469d2264293fcbdf5f10",
+            measurementId: "G-YF5S9HK2Q5"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const notificationsContainer = document.getElementById('notificationsContainer');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const footerProfileCircle = document.getElementById('footerProfileCircle');
+        const profileLink = document.getElementById('profileLink');
+
+        let currentUserId = null;
+        let currentUserData = null;
+        let currentUserFollowing = new Set(); // To store IDs of users current user is following
+
+        // Function to update the footer profile picture
+        function updateFooterProfilePicture(profilePictureUrl, username) {
+            footerProfileCircle.innerHTML = '';
+            footerProfileCircle.classList.remove('has-image');
+
+            if (profilePictureUrl) {
+                const img = document.createElement('img');
+                img.src = profilePictureUrl;
+                img.alt = 'Profile Picture';
+                footerProfileCircle.appendChild(img);
+                footerProfileCircle.classList.add('has-image');
+            } else {
+                const firstLetter = (username && username.length > 0) ? username.charAt(0).toUpperCase() : 'P';
+                footerProfileCircle.textContent = firstLetter;
+            }
+        }
+
+        // Check user authentication
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                console.log('No user logged in, redirecting to login.html');
+                window.location.href = 'login.html';
+            } else {
+                console.log('User is logged in:', user.email);
+                currentUserId = user.uid;
+
+                // Fetch current user's data and following list
+                const userDoc = await db.collection('users').doc(currentUserId).get();
+                if (userDoc.exists) {
+                    currentUserData = userDoc.data();
+                    if (currentUserData.following) {
+                        currentUserFollowing = new Set(currentUserData.following);
+                    }
+                } else {
+                    currentUserData = { username: user.email.split('@')[0], profilePictureUrl: '', following: [] };
+                }
+                updateFooterProfilePicture(currentUserData.profilePictureUrl, currentUserData.username);
+                fetchAndDisplayNotifications();
+            }
+        });
+
+        // Helper function to format timestamp
+        function formatTimestamp(timestamp) {
+            if (!timestamp || !timestamp.toDate) return 'Just now';
+            const date = timestamp.toDate();
+            const now = new Date();
+            const diffSeconds = Math.floor((now - date) / 1000);
+            const diffMinutes = Math.floor(diffSeconds / 60);
+            const diffHours = Math.floor(diffMinutes / 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            if (diffSeconds < 60) return 'Just now';
+            if (diffMinutes < 60) return `${diffMinutes}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        // Function to handle follow/unfollow
+        async function toggleFollow(actorUserId, buttonElement) {
+            if (!currentUserId || !actorUserId || currentUserId === actorUserId) {
+                console.warn("Cannot follow/unfollow self or invalid user ID.");
+                return;
+            }
+
+            const currentUserRef = db.collection('users').doc(currentUserId);
+            const actorUserRef = db.collection('users').doc(actorUserId);
+
+            try {
+                if (currentUserFollowing.has(actorUserId)) {
+                    // Unfollow
+                    await currentUserRef.update({
+                        following: firebase.firestore.FieldValue.arrayRemove(actorUserId),
+                        followingCount: firebase.firestore.FieldValue.increment(-1)
+                    });
+                    await actorUserRef.update({
+                        followers: firebase.firestore.FieldValue.arrayRemove(currentUserId),
+                        followerCount: firebase.firestore.FieldValue.increment(-1)
+                    });
+                    currentUserFollowing.delete(actorUserId);
+                    buttonElement.textContent = 'Follow';
+                    buttonElement.classList.remove('following');
+                    console.log(`Unfollowed user ${actorUserId}`);
+                } else {
+                    // Follow
+                    await currentUserRef.update({
+                        following: firebase.firestore.FieldValue.arrayUnion(actorUserId),
+                        followingCount: firebase.firestore.FieldValue.increment(1)
+                    });
+                    await actorUserRef.update({
+                        followers: firebase.firestore.FieldValue.arrayUnion(currentUserId),
+                        followerCount: firebase.firestore.FieldValue.increment(1)
+                    });
+                    currentUserFollowing.add(actorUserId);
+                    buttonElement.textContent = 'Following';
+                    buttonElement.classList.add('following');
+                    console.log(`Followed user ${actorUserId}`);
+
+                    // Create a follow notification for the actor
+                    await db.collection('notifications').add({
+                        type: 'follow',
+                        actorUserId: currentUserId,
+                        targetUserId: actorUserId,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        read: false
+                    });
+                }
+            } catch (error) {
+                console.error("Error toggling follow status:", error);
+            }
+        }
+
+        // NEW: Function to handle accepting collaboration request
+        async function acceptCollaboration(notificationId, postId, actorUserId, acceptButton, rejectButton) {
+            try {
+                // 1. Mark notification as read and accepted
+                await db.collection('notifications').doc(notificationId).update({
+                    read: true,
+                    status: 'accepted',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp() // Update timestamp to reflect action
+                });
+
+                // 2. Add actorUserId to the post's collaborators array
+                if (postId) {
+                    await db.collection('posts').doc(postId).update({
+                        collaborators: firebase.firestore.FieldValue.arrayUnion(actorUserId)
+                    });
+                    console.log(`User ${actorUserId} added as collaborator to post ${postId}`);
+                }
+
+                // 3. Update UI buttons
+                acceptButton.textContent = 'Accepted';
+                acceptButton.classList.add('accepted');
+                acceptButton.disabled = true;
+                rejectButton.style.display = 'none'; // Hide reject button
+
+                // Optionally, disable the whole notification item from further general clicks
+                const notificationItem = acceptButton.closest('.notification-item');
+                if (notificationItem) {
+                    notificationItem.classList.remove('unread');
+                    notificationItem.style.pointerEvents = 'none'; // Disable pointer events on the entire item
+                }
+
+                console.log(`Collaboration request ${notificationId} accepted.`);
+            } catch (error) {
+                console.error("Error accepting collaboration:", error);
+                alert("Failed to accept collaboration. Please try again.");
+            }
+        }
+
+        // NEW: Function to handle rejecting collaboration request
+        async function rejectCollaboration(notificationId, acceptButton, rejectButton) {
+            try {
+                // 1. Mark notification as read and rejected
+                await db.collection('notifications').doc(notificationId).update({
+                    read: true,
+                    status: 'rejected',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp() // Update timestamp to reflect action
+                });
+
+                // 2. Update UI buttons
+                rejectButton.textContent = 'Rejected';
+                rejectButton.classList.add('rejected');
+                rejectButton.disabled = true;
+                acceptButton.style.display = 'none'; // Hide accept button
+
+                // Optionally, disable the whole notification item from further general clicks
+                const notificationItem = rejectButton.closest('.notification-item');
+                if (notificationItem) {
+                    notificationItem.classList.remove('unread');
+                    notificationItem.style.pointerEvents = 'none'; // Disable pointer events on the entire item
+                }
+
+                console.log(`Collaboration request ${notificationId} rejected.`);
+            } catch (error) {
+                console.error("Error rejecting collaboration:", error);
+                alert("Failed to reject collaboration. Please try again.");
+            }
+        }
+
+
+        // Function to fetch and display notifications
+        async function fetchAndDisplayNotifications() {
+            loadingMessage.textContent = 'Loading notifications...';
+            loadingMessage.style.display = 'block';
+
+            // Clear previous notifications, keep the heading
+            const existingItems = notificationsContainer.querySelectorAll('.notification-item, .no-notifications-message:not(#loadingMessage)');
+            existingItems.forEach(item => item.remove());
+
+            try {
+                // Fetch notifications for the current user, ordered by creation time (newest first)
+                const notificationsSnapshot = await db.collection('notifications')
+                                                    .where('targetUserId', '==', currentUserId)
+                                                    .orderBy('timestamp', 'desc')
+                                                    .get();
+
+                if (notificationsSnapshot.empty) {
+                    const noNotificationsP = document.createElement('p');
+                    noNotificationsP.classList.add('no-notifications-message');
+                    noNotificationsP.textContent = 'No notifications yet.';
+                    notificationsContainer.appendChild(noNotificationsP);
+                    loadingMessage.style.display = 'none';
+                    return;
+                }
+
+                // Fetch all user data once for usernames and avatars
+                const usersSnapshot = await db.collection('users').get();
+                const usersData = {};
+                usersSnapshot.forEach(doc => {
+                    usersData[doc.id] = doc.data();
+                });
+
+                notificationsSnapshot.forEach(doc => {
+                    const notification = doc.data();
+                    const notificationId = doc.id;
+                    const actorUserId = notification.actorUserId; // The user who performed the action
+                    const actorUserData = usersData[actorUserId];
+
+                    const actorUsername = actorUserData ? (actorUserData.username || 'Anonymous') : 'Anonymous';
+                    const isActorVerified = actorUserData ? (actorUserData.isVerified || false) : false;
+
+                    let actorAvatarHtml = '';
+                    if (actorUserData && actorUserData.profilePictureUrl) {
+                        actorAvatarHtml = `<img src="${actorUserData.profilePictureUrl}" alt="${actorUsername}'s Avatar">`;
+                    } else {
+                        const firstLetter = (actorUsername && actorUsername.length > 0) ? actorUsername.charAt(0).toUpperCase() : 'P';
+                        actorAvatarHtml = `<span>${firstLetter}</span>`;
+                    }
+
+                    const verifiedBadgeHtml = isActorVerified ? '<i class="fas fa-check-circle verified-badge" title="Verified"></i>' : '';
+
+                    let notificationMessage = '';
+                    let actionElement = ''; // For follow/unfollow button or collab buttons
+
+                    switch (notification.type) {
+                        case 'like':
+                            notificationMessage = `<span class="username" data-user-id="${actorUserId}">${actorUsername}</span>${verifiedBadgeHtml} liked your post.`;
+                            break;
+                        case 'comment':
+                            notificationMessage = `<span class="username" data-user-id="${actorUserId}">${actorUsername}</span>${verifiedBadgeHtml} commented: "${notification.commentText}" on your post.`;
+                            break;
+                        case 'follow':
+                            notificationMessage = `<span class="username" data-user-id="${actorUserId}">${actorUsername}</span>${verifiedBadgeHtml} started following you.`;
+                            if (actorUserId !== currentUserId) { // Don't show button for self-follows (shouldn't happen)
+                                const isFollowing = currentUserFollowing.has(actorUserId);
+                                actionElement = `
+                                    <div class="follow-button-container">
+                                        <button class="follow-button ${isFollowing ? 'following' : ''}" data-actor-user-id="${actorUserId}">
+                                            ${isFollowing ? 'Following' : 'Follow'}
+                                        </button>
+                                    </div>
+                                `;
+                            }
+                            break;
+                        case 'collaboration_request': // THIS IS THE FIX
+                            notificationMessage = `<span class="username" data-user-id="${actorUserId}">${actorUsername}</span>${verifiedBadgeHtml} sent you a collaboration request.`;
+                            
+                            const collabStatus = notification.status; // 'pending', 'accepted', 'rejected'
+                            let acceptBtnText = 'Accept';
+                            let rejectBtnText = 'Reject';
+                            let acceptBtnClass = 'collab-button accept-collab';
+                            let rejectBtnClass = 'collab-button reject-collab';
+                            
+                            // Determine buttons to show based on status
+                            if (collabStatus === 'accepted') {
+                                actionElement = `
+                                    <div class="collaboration-actions">
+                                        <button class="collab-button accepted" disabled>Accepted</button>
+                                    </div>
+                                `;
+                            } else if (collabStatus === 'rejected') {
+                                actionElement = `
+                                    <div class="collaboration-actions">
+                                        <button class="collab-button rejected" disabled>Rejected</button>
+                                    </div>
+                                `;
+                            } else { // status is 'pending'
+                                actionElement = `
+                                    <div class="collaboration-actions">
+                                        <button class="${acceptBtnClass}" data-notification-id="${notificationId}" data-post-id="${notification.postId}" data-actor-user-id="${actorUserId}">Accept</button>
+                                        <button class="${rejectBtnClass}" data-notification-id="${notificationId}">Reject</button>
+                                    </div>
+                                `;
+                            }
+                            break;
+                        default:
+                            notificationMessage = `New activity from <span class="username" data-user-id="${actorUserId}">${actorUsername}</span>${verifiedBadgeHtml}.`;
+                    }
+
+                    const notificationItem = document.createElement('div');
+                    notificationItem.classList.add('notification-item');
+                    if (!notification.read) {
+                        notificationItem.classList.add('unread');
+                    }
+                    notificationItem.dataset.notificationId = notificationId;
+                    
+                    notificationItem.innerHTML = `
+                        <div class="avatar" data-user-id="${actorUserId}">${actorAvatarHtml}</div>
+                        <div class="notification-content">
+                            ${notificationMessage}
+                        </div>
+                        <span class="notification-timestamp">${formatTimestamp(notification.timestamp)}</span>
+                        ${actionElement}
+                    `;
+                    notificationsContainer.appendChild(notificationItem);
+
+                    // --- Event Listeners for the new functionality ---
+
+                    // Click listener for the notification content area (for likes/comments)
+                    if (notification.type === 'like' || notification.type === 'comment') {
+                        const contentDiv = notificationItem.querySelector('.notification-content');
+                        if (contentDiv) {
+                            contentDiv.addEventListener('click', async (event) => {
+                                if (!event.target.classList.contains('username') && !event.target.closest('.avatar')) {
+                                    if (!notification.read) {
+                                        try {
+                                            await db.collection('notifications').doc(notificationId).update({ read: true });
+                                            notificationItem.classList.remove('unread');
+                                        } catch (error) {
+                                            console.error("Error marking notification as read:", error);
+                                        }
+                                    }
+                                    if (notification.postId) {
+                                        window.location.href = `comments.html?postId=${notification.postId}`;
+                                    }
+                                }
+                            });
+                        }
+                    }
+
+                    // Click listener for the avatar (always goes to user_profile.html)
+                    const avatarElement = notificationItem.querySelector('.avatar');
+                    if (avatarElement) {
+                        avatarElement.addEventListener('click', (event) => {
+                            event.stopPropagation(); // Prevent parent clicks
+                            const userIdToNavigate = avatarElement.dataset.userId;
+                            if (userIdToNavigate) {
+                                window.location.href = `user_profile.html?userId=${userIdToNavigate}`; // Changed to user_profile.html
+                            }
+                        });
+                    }
+
+                    // Click listener for the username (always goes to user_profile.html)
+                    const usernameElements = notificationItem.querySelectorAll('.username');
+                    usernameElements.forEach(usernameSpan => {
+                        usernameSpan.addEventListener('click', (event) => {
+                            event.stopPropagation(); // Prevent parent clicks
+                            const userIdToNavigate = usernameSpan.dataset.userId;
+                            if (userIdToNavigate) {
+                                window.location.href = `user_profile.html?userId=${userIdToNavigate}`; // Changed to user_profile.html
+                            }
+                        });
+                    });
+
+                    // Specific click listener for the follow button
+                    const followButton = notificationItem.querySelector('.follow-button');
+                    if (followButton) {
+                        followButton.addEventListener('click', (event) => {
+                            event.stopPropagation(); // Prevent the notification item's click listener from firing
+                            const actorId = event.target.dataset.actorUserId;
+                            toggleFollow(actorId, event.target);
+                        });
+                    }
+
+                    // NEW: Specific click listeners for collaboration buttons
+                    if (notification.type === 'collaboration_request' && notification.status === 'pending') {
+                        const acceptButton = notificationItem.querySelector('.accept-collab');
+                        const rejectButton = notificationItem.querySelector('.reject-collab');
+
+                        if (acceptButton) {
+                            acceptButton.addEventListener('click', (event) => {
+                                event.stopPropagation();
+                                const collabNotificationId = event.target.dataset.notificationId;
+                                const collabPostId = event.target.dataset.postId;
+                                const collabActorUserId = event.target.dataset.actorUserId;
+                                acceptCollaboration(collabNotificationId, collabPostId, collabActorUserId, acceptButton, rejectButton);
+                            });
+                        }
+
+                        if (rejectButton) {
+                            rejectButton.addEventListener('click', (event) => {
+                                event.stopPropagation();
+                                const collabNotificationId = event.target.dataset.notificationId;
+                                rejectCollaboration(collabNotificationId, acceptButton, rejectButton);
+                            });
+                        }
+                    } else if (notification.type === 'collaboration_request' && (notification.status === 'accepted' || notification.status === 'rejected')) {
+                        // If status is already accepted or rejected, make the entire notification item non-clickable
+                        // and hide unread status.
+                        notificationItem.classList.remove('unread');
+                        notificationItem.style.pointerEvents = 'none';
+                    }
+
+
+                    // Generic click listener for the entire notification item to mark as read
+                    // This will act as a fallback for clicks that don't hit specific elements like avatar, username, or button.
+                    notificationItem.addEventListener('click', async (event) => {
+                        // Only mark as read if a more specific clickable element (avatar, username, button, collab buttons) wasn't clicked
+                        if (!event.target.classList.contains('username') &&
+                            !event.target.closest('.avatar') &&
+                            !event.target.closest('.follow-button') &&
+                            !event.target.closest('.collab-button')) {
+
+                            if (!notification.read) {
+                                try {
+                                    await db.collection('notifications').doc(notificationId).update({ read: true });
+                                    notificationItem.classList.remove('unread');
+                                    console.log(`Notification ${notificationId} marked as read.`);
+                                } catch (error) {
+                                    console.error("Error marking notification as read:", error);
+                                }
+                            }
+                            // Note: Navigation for posts/profiles is now handled by more specific listeners above.
+                            // This general listener primarily marks as read if other elements weren't clicked.
+                        }
+                    });
+
+                });
+            } catch (error) {
+                console.error("Error fetching notifications:", error);
+                const errorP = document.createElement('p');
+                errorP.classList.add('no-notifications-message');
+                errorP.textContent = 'Error loading notifications. Please try again.';
+                notificationsContainer.appendChild(errorP);
+            } finally {
+                loadingMessage.style.display = 'none'; // Hide loading message
+            }
+        }
+
+        // Footer navigation logic (remains the same as home.html)
+        document.addEventListener('DOMContentLoaded', () => {
+            const navItems = document.querySelectorAll('.footer .nav-item');
+            const homeLink = document.getElementById('homeLink');
+            const searchLink = document.getElementById('searchLink');
+            const createPostLink = document.getElementById('createPostLink');
+            const notificationsLink = document.getElementById('notificationsLink');
+            const profileLink = document.getElementById('profileLink');
+
+            function setActiveLink(clickedLink) {
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                    const profileCircle = item.querySelector('.profile-circle');
+                    if (profileCircle) {
+                        profileCircle.style.borderColor = 'transparent';
+                    }
+                });
+                clickedLink.classList.add('active');
+                const profileCircle = clickedLink.querySelector('.profile-circle');
+                if (profileCircle && profileCircle.classList.contains('has-image')) {
+                    profileCircle.style.borderColor = '#0095f6';
+                } else if (profileCircle) {
+                    profileCircle.style.borderColor = 'transparent';
+                }
+            }
+
+            const currentPath = window.location.pathname.split('/').pop();
+            if (currentPath === 'search.html') {
+                setActiveLink(searchLink);
+            } else if (currentPath === 'create.html') {
+                setActiveLink(createPostLink);
+            } else if (currentPath === 'notifications.html') {
+                setActiveLink(notificationsLink);
+            } else if (currentPath === 'profile.html') {
+                setActiveLink(profileLink);
+            } else {
+                setActiveLink(homeLink);
+            }
+
+            navItems.forEach(item => {
+                item.addEventListener('click', function(event) {
+                    if (this.getAttribute('href') === '#' || this.classList.contains('active')) {
+                        event.preventDefault();
+                    }
+                    setActiveLink(this);
+                });
+            });
+
+            updateFooterProfilePicture(null, 'P');
+        });
+    </script>
+</body>
+</html>

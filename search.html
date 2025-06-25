@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Users</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Global Styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: #121212; /* Dark background */
+            color: #f5f5f5; /* Light text for dark theme */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background-color: #1a1a1a;
+            border-bottom: 1px solid #262626;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header .logo {
+            font-family: 'Billabong', cursive;
+            font-size: 28px;
+            color: #f5f5f5;
+            text-decoration: none;
+        }
+
+        @font-face {
+            font-family: 'Billabong';
+            src: url('https://raw.githubusercontent.com/s6n/instagram-font/master/Billabong.ttf') format('truetype');
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .search-input-wrapper {
+            display: flex;
+            align-items: center;
+            background-color: #262626;
+            border-radius: 8px;
+            padding: 8px 12px;
+        }
+
+        .search-input-wrapper i {
+            color: #8e8e8e;
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .search-input {
+            flex-grow: 1;
+            border: none;
+            background: none;
+            color: #f5f5f5;
+            font-size: 16px;
+            padding: 5px 0;
+        }
+
+        .search-input::placeholder {
+            color: #8e8e8e;
+        }
+
+        .search-input:focus {
+            outline: none;
+        }
+
+        .search-results {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #262626;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            overflow: hidden; /* For ellipsis */
+        }
+
+        .user-info .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #b3b3b3;
+            margin-right: 12px;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .user-info .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* For ellipsis */
+        }
+
+        .user-details .username, .user-details .fullname {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-details .username {
+            font-weight: bold;
+            color: #f5f5f5;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .user-details .username a {
+            color: inherit; /* Keep the color from the parent .username */
+            text-decoration: none; /* Remove underline */
+        }
+
+        .user-details .username a:hover {
+            text-decoration: underline; /* Add underline on hover */
+        }
+
+        .user-details .fullname {
+            color: #8e8e8e;
+            font-size: 14px;
+        }
+
+        .verified-badge {
+            width: 16px;
+            height: 16px;
+            margin-left: 5px;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+
+        .follow-button {
+            background-color: #0095f6;
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .follow-button:hover {
+            background-color: #007acb;
+        }
+
+        .follow-button.following {
+            background-color: #363636;
+            color: #b3b3b3;
+        }
+
+        .no-results-message {
+            text-align: center;
+            padding: 30px 0;
+            color: #8e8e8e;
+            font-size: 16px;
+        }
+
+        /* Footer Navigation (Copied from home.html) */
+        .footer {
+            background-color: #1a1a1a;
+            border-top: 1px solid #262626;
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: sticky;
+            bottom: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .footer .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #f5f5f5;
+            font-size: 22px;
+            transition: color 0.2s ease;
+            flex-basis: 20%;
+            text-align: center;
+        }
+
+        .footer .nav-item i {
+            margin-bottom: 3px;
+        }
+
+        /* Profile picture in footer */
+        .footer .profile-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: #b3b3b3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            overflow: hidden;
+            margin-bottom: 3px;
+            border: 2px solid transparent;
+        }
+
+        .footer .profile-circle.has-image {
+            border-color: #f5f5f5;
+        }
+
+        .footer .profile-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .footer .nav-item.active {
+            color: #0095f6;
+        }
+
+        .footer .nav-item:hover {
+            color: #8e8e8e;
+        }
+
+        .footer .nav-item.active .profile-circle {
+            border-color: #0095f6;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+            .header .logo {
+                font-size: 24px;
+            }
+            .main-content {
+                padding: 15px;
+            }
+            .search-container {
+                padding: 15px;
+            }
+            .search-input-wrapper {
+                padding: 6px 10px;
+            }
+            .search-input {
+                font-size: 15px;
+            }
+            .user-info .avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+            .user-details .username {
+                font-size: 15px;
+            }
+            .user-details .fullname {
+                font-size: 13px;
+            }
+            .follow-button {
+                padding: 7px 12px;
+                font-size: 13px;
+            }
+            .verified-badge {
+                width: 14px;
+                height: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header .logo {
+                font-size: 22px;
+            }
+            .main-content {
+                padding: 10px;
+            }
+            .search-container {
+                padding: 10px;
+                gap: 10px;
+            }
+            .search-input-wrapper {
+                padding: 5px 8px;
+            }
+            .search-input {
+                font-size: 14px;
+            }
+            .user-info .avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+            .user-details .username {
+                font-size: 14px;
+            }
+            .user-details .fullname {
+                font-size: 12px;
+            }
+            .follow-button {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+            .verified-badge {
+                width: 12px;
+                height: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="home.html" class="logo">Bluenote</a>
+    </div>
+
+    <div class="main-content">
+        <div class="search-container">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search users...">
+            </div>
+            <div class="search-results" id="searchResults">
+                <p class="no-results-message" id="initialMessage">Start typing to search for users.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <a href="home.html" class="nav-item" id="homeLink">
+            <i class="fas fa-home"></i>
+        </a>
+        <a href="search.html" class="nav-item active" id="searchLink">
+            <i class="fas fa-search"></i>
+        </a>
+        <a href="create.html" class="nav-item" id="createPostLink">
+            <i class="fas fa-plus-square"></i>
+        </a>
+        <a href="notifications.html" class="nav-item" id="notificationsLink">
+            <i class="fas fa-heart"></i>
+        </a>
+        <a href="profile.html" class="nav-item" id="profileLink">
+            <div class="profile-circle" id="footerProfileCircle">
+                <i class="far fa-user-circle" style="display: none;"></i>
+            </div>
+        </a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-storage-compat.js"></script>
+
+    <script>
+        // Your Firebase project configuration
+        const firebaseConfig = {
+  apiKey: "AIzaSyAdu3d0_qEDZaXkBkJAO0VY0htme6_EMyM",
+  authDomain: "bluegram-27a79.firebaseapp.com",
+  databaseURL: "https://bluegram-27a79-default-rtdb.firebaseio.com",
+  projectId: "bluegram-27a79",
+  storageBucket: "bluegram-27a79.firebasestorage.app",
+  messagingSenderId: "780485443121",
+  appId: "1:780485443121:web:f7469d2264293fcbdf5f10",
+  measurementId: "G-YF5S9HK2Q5"
+};
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        const initialMessage = document.getElementById('initialMessage');
+        const footerProfileCircle = document.getElementById('footerProfileCircle');
+
+        let currentUserId = null;
+        let currentUserData = null; // To store current user's data (e.g., username, profile pic)
+        let currentFollowedUsers = new Set(); // To store UIDs of users current user is following
+
+        // SVG for the verified badge (copied from home.html)
+        const verifiedSVG = `<svg class="verified-badge" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 256 256" xml:space="preserve">
+            <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                <polygon points="45,6.18 57.06,0 64.41,11.38 77.94,12.06 78.62,25.59 90,32.94 83.82,45 90,57.06 78.62,64.41 77.94,77.94 64.41,78.62 57.06,90 45,83.82 32.94,90 25.59,78.62 12.06,77.94 11.38,64.41 0,57.06 6.18,45 0,32.94 11.38,25.59 12.06,12.06 25.59,11.38 32.94,0 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; fill: rgb(0,150,241); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+                <polygon points="40.16,58.47 26.24,45.08 29.7,41.48 40.15,51.52 61.22,31.08 64.7,34.67 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+            </g>
+        </svg>`;
+
+        // Helper to add notifications (copied from home.html/comments.html)
+        async function addNotification(type, targetUserId, postId = null, commentText = null) {
+            if (!currentUserId || !currentUserData) {
+                console.warn('Cannot add notification: current user not logged in or data not fetched.');
+                return;
+            }
+            if (currentUserId === targetUserId) {
+                console.log('Skipping self-notification for follow/unfollow.');
+                return;
+            }
+
+            try {
+                await db.collection('notifications').add({
+                    type: type, // 'like', 'comment', 'follow'
+                    targetUserId: targetUserId, // User who receives notification
+                    actorUserId: currentUserId, // User who performed action
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    read: false,
+                    postId: postId, // Not relevant for follow
+                    commentText: commentText // Not relevant for follow
+                });
+                console.log(`Notification added: ${type} for ${targetUserId}`);
+            } catch (error) {
+                console.error("Error adding notification:", error);
+            }
+        }
+
+        // Function to update the footer profile picture (copied from home.html)
+        function updateFooterProfilePicture(profilePictureUrl, username) {
+            footerProfileCircle.innerHTML = ''; // Clear previous content
+            footerProfileCircle.classList.remove('has-image'); // Remove class initially
+
+            if (profilePictureUrl) {
+                const img = document.createElement('img');
+                img.src = profilePictureUrl;
+                img.alt = 'Profile Picture';
+                footerProfileCircle.appendChild(img);
+                footerProfileCircle.classList.add('has-image');
+            } else {
+                const firstLetter = (username && username.length > 0) ? username.charAt(0).toUpperCase() : 'P';
+                footerProfileCircle.textContent = firstLetter;
+            }
+        }
+
+        // Authentication State Change Listener
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                console.log('No user logged in, redirecting to login.html');
+                window.location.href = 'login.html';
+            } else {
+                console.log('User is logged in:', user.email);
+                currentUserId = user.uid;
+                const userDoc = await db.collection('users').doc(currentUserId).get();
+                if (userDoc.exists) {
+                    currentUserData = userDoc.data();
+                    // Initialize following array if it doesn't exist to prevent errors
+                    if (!currentUserData.following) {
+                        currentUserData.following = [];
+                    }
+                    currentFollowedUsers = new Set(currentUserData.following);
+                } else {
+                    currentUserData = { username: user.email.split('@')[0], profilePictureUrl: '', isVerified: false, following: [], followersCount: 0, followingCount: 0 };
+                    // Ensure counts are initialized when creating a new user doc
+                    await db.collection('users').doc(currentUserId).set(currentUserData, { merge: true });
+                }
+                updateFooterProfilePicture(currentUserData.profilePictureUrl, currentUserData.username);
+            }
+        });
+
+        // Search functionality
+        let searchTimeout;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            initialMessage.style.display = 'none'; // Hide initial message when typing
+            searchTimeout = setTimeout(performSearch, 300); // Debounce search input
+        });
+
+        async function performSearch() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            searchResults.innerHTML = ''; // Clear previous results
+
+            if (searchTerm.length === 0) {
+                initialMessage.textContent = 'Start typing to search for users.';
+                initialMessage.style.display = 'block';
+                return;
+            }
+
+            try {
+                // Query for users whose username or fullname starts with the search term
+                const usersRef = db.collection('users');
+                const usernameQuery = await usersRef.where('username', '>=', searchTerm)
+                                                     .where('username', '<=', searchTerm + '\uf8ff')
+                                                     .get();
+
+                const fullnameQuery = await usersRef.where('fullname', '>=', searchTerm)
+                                                     .where('fullname', '<=', searchTerm + '\uf8ff')
+                                                     .get();
+
+                const uniqueUsers = new Map(); // Use a Map to store unique users by UID
+
+                usernameQuery.forEach(doc => {
+                    if (doc.id !== currentUserId) { // Don't show current user in search results
+                        uniqueUsers.set(doc.id, doc.data());
+                    }
+                });
+                fullnameQuery.forEach(doc => {
+                    if (doc.id !== currentUserId) { // Don't show current user in search results
+                        uniqueUsers.set(doc.id, doc.data()); // Overwrites if already added by username, which is fine
+                    }
+                });
+
+                if (uniqueUsers.size === 0) {
+                    searchResults.innerHTML = '<p class="no-results-message">No users found matching your search.</p>';
+                    return;
+                }
+
+                uniqueUsers.forEach((userData, userId) => {
+                    renderUserCard(userId, userData);
+                });
+
+            } catch (error) {
+                console.error("Error searching users:", error);
+                searchResults.innerHTML = '<p class="no-results-message">Error searching for users. Please try again.</p>';
+            }
+        }
+
+        function renderUserCard(userId, userData) {
+            const username = userData.username || 'N/A';
+            const fullname = userData.fullname || '';
+            const profilePictureUrl = userData.profilePictureUrl || '';
+            const isVerified = userData.isVerified || false;
+            const isFollowing = currentFollowedUsers.has(userId);
+
+            let avatarHtml = '';
+            if (profilePictureUrl) {
+                avatarHtml = `<img src="${profilePictureUrl}" alt="User Avatar">`;
+            } else {
+                const firstLetter = (username && username.length > 0) ? username.charAt(0).toUpperCase() : 'U';
+                avatarHtml = `<span>${firstLetter}</span>`;
+            }
+
+            const userCard = document.createElement('div');
+            userCard.classList.add('user-card');
+            userCard.innerHTML = `
+                <div class="user-info">
+                    <div class="avatar">${avatarHtml}</div>
+                    <div class="user-details">
+                        <span class="username">
+                            <a href="user_profile.html?userId=${userId}">${username}</a> ${isVerified ? verifiedSVG : ''}
+                        </span>
+                        ${fullname ? `<span class="fullname">${fullname}</span>` : ''}
+                    </div>
+                </div>
+                <button class="follow-button ${isFollowing ? 'following' : ''}" data-targetuserid="${userId}">
+                    ${isFollowing ? 'Following' : 'Follow'}
+                </button>
+            `;
+            searchResults.appendChild(userCard);
+
+            // Add event listener for the follow button
+            const followButton = userCard.querySelector('.follow-button');
+            followButton.addEventListener('click', () => toggleFollow(userId, followButton, username));
+        }
+
+        async function toggleFollow(targetUserId, buttonElement, targetUsername) {
+            if (!currentUserId) {
+                alert('You must be logged in to follow users.');
+                return;
+            }
+            if (currentUserId === targetUserId) {
+                alert('You cannot follow yourself.');
+                return;
+            }
+
+            const currentUserRef = db.collection('users').doc(currentUserId);
+            const targetUserRef = db.collection('users').doc(targetUserId);
+
+            try {
+                if (currentFollowedUsers.has(targetUserId)) {
+                    // Unfollow
+                    await currentUserRef.update({
+                        following: firebase.firestore.FieldValue.arrayRemove(targetUserId),
+                        followingCount: firebase.firestore.FieldValue.increment(-1) // Decrement current user's following count
+                    });
+                    await targetUserRef.update({
+                        followers: firebase.firestore.FieldValue.arrayRemove(currentUserId),
+                        followersCount: firebase.firestore.FieldValue.increment(-1) // Decrement target user's followers count
+                    });
+                    currentFollowedUsers.delete(targetUserId);
+                    buttonElement.textContent = 'Follow';
+                    buttonElement.classList.remove('following');
+                    console.log(`Unfollowed ${targetUsername}`);
+                } else {
+                    // Follow
+                    await currentUserRef.update({
+                        following: firebase.firestore.FieldValue.arrayUnion(targetUserId),
+                        followingCount: firebase.firestore.FieldValue.increment(1) // Increment current user's following count
+                    });
+                    await targetUserRef.update({
+                        followers: firebase.firestore.FieldValue.arrayUnion(currentUserId),
+                        followersCount: firebase.firestore.FieldValue.increment(1) // Increment target user's followers count
+                    });
+                    currentFollowedUsers.add(targetUserId);
+                    buttonElement.textContent = 'Following';
+                    buttonElement.classList.add('following');
+                    console.log(`Following ${targetUsername}`);
+
+                    // Add notification for the user who was followed
+                    await addNotification('follow', targetUserId);
+                }
+            } catch (error) {
+                console.error("Error toggling follow status:", error);
+                alert('Error updating follow status. Please try again.');
+            }
+        }
+
+        // Footer navigation logic (copied from home.html)
+        document.addEventListener('DOMContentLoaded', () => {
+            const navItems = document.querySelectorAll('.footer .nav-item');
+            const homeLink = document.getElementById('homeLink');
+            const searchLink = document.getElementById('searchLink');
+            const createPostLink = document.getElementById('createPostLink');
+            const notificationsLink = document.getElementById('notificationsLink');
+            const profileLink = document.getElementById('profileLink');
+
+            function setActiveLink(clickedLink) {
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                    const profileCircle = item.querySelector('.profile-circle');
+                    if (profileCircle) {
+                        profileCircle.style.borderColor = 'transparent';
+                    }
+                });
+                clickedLink.classList.add('active');
+                const profileCircle = clickedLink.querySelector('.profile-circle');
+                if (profileCircle) {
+                    profileCircle.style.borderColor = '#0095f6';
+                }
+            }
+
+            const currentPath = window.location.pathname;
+            if (currentPath.includes('search.html')) {
+                setActiveLink(searchLink);
+            } else if (currentPath.includes('create.html')) {
+                setActiveLink(createPostLink);
+            } else if (currentPath.includes('notifications.html')) {
+                setActiveLink(notificationsLink);
+            } else if (currentPath.includes('profile.html')) {
+                setActiveLink(profileLink);
+            } else {
+                setActiveLink(homeLink);
+            }
+
+            navItems.forEach(item => {
+                item.addEventListener('click', function(event) {
+                    if (this.getAttribute('href') === '#' || this.getAttribute('href') === window.location.pathname.split('/').pop()) {
+                        event.preventDefault();
+                    }
+                    setActiveLink(this);
+                    const iconType = this.querySelector('i') ? this.querySelector('i').classList[1] : 'profile-circle';
+                    console.log('Clicked:', iconType);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

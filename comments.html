@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comments</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Global Styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: #121212; /* Dark background */
+            color: #f5f5f5; /* Light text for dark theme */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background-color: #1a1a1a;
+            border-bottom: 1px solid #262626;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header .back-btn {
+            color: #f5f5f5;
+            font-size: 24px;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+
+        .header .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #f5f5f5;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        /* Main Content Area */
+        .comments-main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 600px; /* Same as feed-container for consistency */
+            width: 100%;
+            margin: 0 auto;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden; /* To contain inner scroll if needed */
+        }
+
+        /* Post Caption (if shown at top of comments) */
+        .post-full-caption {
+            padding: 15px;
+            border-bottom: 1px solid #262626;
+            background-color: #262626;
+            color: #f5f5f5;
+            font-size: 14px;
+        }
+
+        .post-full-caption .username {
+            font-weight: bold;
+            margin-right: 5px;
+            color: #f5f5f5;
+        }
+
+        /* Comments List */
+        .comments-list {
+            flex-grow: 1;
+            overflow-y: auto; /* Enable scrolling for comments if they exceed height */
+            padding: 15px;
+            color: #b3b3b3;
+        }
+
+        .no-comments-message {
+            text-align: center;
+            padding: 50px 20px;
+            font-size: 16px;
+            color: #b3b3b3;
+        }
+
+        .comment-item {
+            display: flex;
+            align-items: flex-start; /* Align avatar to top of comment */
+            gap: 10px;
+            margin-bottom: 15px;
+            position: relative; /* For reply positioning and action menu */
+            padding-right: 30px; /* Space for three dots menu */
+        }
+
+        .comment-item.pinned {
+            background-color: #2a2a2a; /* Slightly different background for pinned comments */
+            border-left: 3px solid #0095f6; /* Blue border for visual cue */
+            padding-left: 12px; /* Adjust padding for border */
+            border-radius: 4px;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        .comment-item .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #b3b3b3;
+            overflow: hidden;
+            flex-shrink: 0; /* Prevent avatar from shrinking */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .comment-item .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .comment-content {
+            flex-grow: 1;
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3px;
+        }
+
+        .comment-header .username {
+            font-weight: bold;
+            color: #f5f5f5;
+            margin-right: 5px;
+        }
+
+        .verified-badge {
+            width: 14px; /* Slightly smaller for comments */
+            height: 14px;
+            margin-left: 3px;
+            vertical-align: middle;
+        }
+
+        .comment-text {
+            color: #f5f5f5;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #8e8e8e;
+            align-items: center; /* Align items vertically */
+        }
+
+        .comment-actions span,
+        .comment-actions i {
+            cursor: pointer;
+        }
+
+        .comment-actions span:hover,
+        .comment-actions i:hover {
+            opacity: 0.8;
+        }
+
+        .comment-actions .like-button {
+            font-size: 16px; /* Icon size */
+            color: #8e8e8e;
+            margin-right: -5px; /* Adjust spacing with text */
+        }
+
+        .comment-actions .like-button.liked {
+            color: #ed4956;
+        }
+
+        .comment-actions .reply-button {
+            font-size: 12px; /* Text size */
+        }
+
+
+        .comment-likes {
+            font-size: 12px;
+            color: #8e8e8e;
+            margin-top: 2px;
+        }
+
+        /* Three Dots Menu */
+        .comment-options-menu {
+            position: absolute;
+            top: 5px;
+            right: 0;
+            cursor: pointer;
+            font-size: 16px;
+            color: #8e8e8e;
+        }
+
+        .comment-options-dropdown {
+            position: absolute;
+            top: 25px; /* Position below the three dots */
+            right: 0;
+            background-color: #262626;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+            z-index: 10;
+            display: none; /* Hidden by default */
+            min-width: 120px;
+            overflow: hidden;
+        }
+
+        .comment-options-dropdown.active {
+            display: block;
+        }
+
+        .comment-options-dropdown button {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            background: none;
+            border: none;
+            color: #f5f5f5;
+            text-align: left;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+        .comment-options-dropdown button:hover {
+            background-color: #363636;
+        }
+
+        .comment-options-dropdown button.delete {
+            color: #ed4956;
+        }
+
+        /* Replies styling */
+        .replies-container {
+            margin-top: 10px;
+            border-top: 1px solid #262626;
+            padding-top: 10px;
+            margin-left: 20px; /* Indent replies */
+        }
+
+        .reply-item {
+            margin-bottom: 10px;
+            padding-left: 0; /* Remove specific padding for the item itself */
+            padding-right: 0;
+            position: relative; /* For its own menu */
+        }
+
+        .reply-item .comment-content {
+            padding-left: 0; /* Ensure content starts at the same level */
+        }
+        .reply-item .comment-header {
+            font-size: 13px;
+        }
+        .reply-item .comment-text {
+            font-size: 13px;
+        }
+        .reply-item .comment-actions {
+            font-size: 11px;
+        }
+        .reply-item .comment-actions .like-button {
+            font-size: 14px;
+        }
+
+
+        /* Add Comment Section */
+        .add-comment-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background-color: #1a1a1a;
+            border-top: 1px solid #262626;
+            box-sizing: border-box;
+            flex-shrink: 0; /* Prevent from shrinking */
+        }
+
+        .add-comment-section input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #363636;
+            border-radius: 4px;
+            background-color: #121212;
+            color: #f5f5f5;
+            font-size: 14px;
+        }
+
+        .add-comment-section input::placeholder {
+            color: #8e8e8e;
+        }
+
+        .add-comment-section input:focus {
+            outline: none;
+            border-color: #0095f6;
+        }
+
+        .add-comment-section button {
+            background-color: #0095f6;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .add-comment-section button:hover {
+            background-color: #007acb;
+        }
+
+        /* Reply input styling */
+        .reply-input-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            width: 100%; /* Take full width of the parent .comment-content */
+        }
+
+        .reply-input-section input {
+            flex-grow: 1;
+            padding: 7px 10px;
+            border: 1px solid #363636;
+            border-radius: 4px;
+            background-color: #1a1a1a;
+            color: #f5f5f5;
+            font-size: 13px;
+        }
+
+        .reply-input-section button {
+            background-color: #0095f6;
+            color: #fff;
+            border: none;
+            padding: 7px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            flex-shrink: 0;
+        }
+        .reply-input-section button:hover {
+            background-color: #007acb;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+            .comments-main-content {
+                margin: 0;
+                border-radius: 0;
+            }
+            .post-full-caption, .comments-list, .add-comment-section {
+                padding: 10px 15px;
+            }
+            .comment-item {
+                margin-bottom: 12px;
+            }
+            .comment-item .avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
+            .comment-header .username, .comment-text {
+                font-size: 13px;
+            }
+            .comment-actions, .comment-likes {
+                font-size: 11px;
+            }
+            .add-comment-section input, .add-comment-section button {
+                font-size: 13px;
+                padding: 8px 12px;
+            }
+            .reply-input-section input, .reply-input-section button {
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+            .comment-options-menu {
+                font-size: 14px;
+            }
+            .comment-options-dropdown {
+                min-width: 100px;
+            }
+            .comment-options-dropdown button {
+                font-size: 13px;
+            }
+            .replies-container {
+                margin-left: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 8px 10px;
+            }
+            .header .back-btn {
+                font-size: 22px;
+            }
+            .header .title {
+                font-size: 18px;
+            }
+            .post-full-caption, .comments-list, .add-comment-section {
+                padding: 8px 10px;
+            }
+            .comment-item {
+                margin-bottom: 10px;
+            }
+            .comment-item .avatar {
+                width: 26px;
+                height: 26px;
+                font-size: 13px;
+            }
+            .comment-header .username, .comment-text {
+                font-size: 12px;
+            }
+            .comment-actions, .comment-likes {
+                font-size: 10px;
+            }
+            .add-comment-section input, .add-comment-section button {
+                font-size: 12px;
+                padding: 7px 10px;
+            }
+            .reply-input-section input, .reply-input-section button {
+                font-size: 11px;
+                padding: 5px 8px;
+            }
+            .comment-options-menu {
+                font-size: 12px;
+            }
+            .replies-container {
+                margin-left: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="home.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+        <span class="title">Comments</span>
+        <div></div> </div>
+
+    <div class="comments-main-content">
+        <div class="post-full-caption" id="postCaptionDisplay" style="display: none;">
+            </div>
+
+        <div class="comments-list" id="commentsList">
+            <p class="no-comments-message" id="loadingCommentsMessage">Loading comments...</p>
+        </div>
+    </div>
+
+    <div class="add-comment-section">
+        <input type="text" id="newCommentInput" placeholder="Add a comment...">
+        <button id="postCommentBtn">Post</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Your Firebase project configuration (same as home.html)
+         const firebaseConfig = {
+  apiKey: "AIzaSyAdu3d0_qEDZaXkBkJAO0VY0htme6_EMyM",
+  authDomain: "bluegram-27a79.firebaseapp.com",
+  databaseURL: "https://bluegram-27a79-default-rtdb.firebaseio.com",
+  projectId: "bluegram-27a79",
+  storageBucket: "bluegram-27a79.firebasestorage.app",
+  messagingSenderId: "780485443121",
+  appId: "1:780485443121:web:f7469d2264293fcbdf5f10",
+  measurementId: "G-YF5S9HK2Q5"
+};
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const commentsList = document.getElementById('commentsList');
+        const loadingCommentsMessage = document.getElementById('loadingCommentsMessage');
+        const newCommentInput = document.getElementById('newCommentInput');
+        const postCommentBtn = document.getElementById('postCommentBtn');
+        const postCaptionDisplay = document.getElementById('postCaptionDisplay');
+
+        let currentUserId = null;
+        let currentUserData = null; // To store current user's data for new comments/avatars
+        let postId = null; // This will store the postId from the URL
+        let postOwnerId = null; // Store the ID of the user who owns the current post
+
+        // SVG for the verified badge (same as home.html)
+        const verifiedSVG = `<svg class="verified-badge" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 256 256" xml:space="preserve">
+            <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                <polygon points="45,6.18 57.06,0 64.41,11.38 77.94,12.06 78.62,25.59 90,32.94 83.82,45 90,57.06 78.62,64.41 77.94,77.94 64.41,78.62 57.06,90 45,83.82 32.94,90 25.59,78.62 12.06,77.94 11.38,64.41 0,57.06 6.18,45 0,32.94 11.38,25.59 12.06,12.06 25.59,11.38 32.94,0 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; fill: rgb(0,150,241); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+                <polygon points="40.16,58.47 26.24,45.08 29.7,41.48 40.15,51.52 61.22,31.08 64.7,34.67 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+            </g>
+        </svg>`;
+
+        // Helper to get query parameter
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // Helper to add notifications (similar to home.html)
+        async function addNotification(type, targetUserId, postId = null, commentText = null, actorCommentId = null) {
+            if (!currentUserId || !currentUserData) {
+                console.warn('Cannot add notification: current user not logged in or data not fetched.');
+                return;
+            }
+            if (currentUserId === targetUserId && type !== 'follow') {
+                console.log('Skipping self-notification for likes/comments/replies.');
+                return;
+            }
+
+            try {
+                await db.collection('notifications').add({
+                    type: type, // 'comment', 'reply', 'comment_like'
+                    targetUserId: targetUserId, // User who receives notification
+                    actorUserId: currentUserId, // User who performed action
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    read: false,
+                    postId: postId,
+                    commentText: commentText, // Text for comments/replies
+                    actorCommentId: actorCommentId // The comment being replied to or liked
+                });
+                console.log(`Notification added: ${type} for ${targetUserId}`);
+            } catch (error) {
+                console.error("Error adding notification:", error);
+            }
+        }
+
+        // Check if user is logged in
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                console.log('No user logged in, redirecting to login.html');
+                window.location.href = 'login.html';
+            } else {
+                console.log('User is logged in:', user.email);
+                currentUserId = user.uid;
+                const userDoc = await db.collection('users').doc(currentUserId).get();
+                if (userDoc.exists) {
+                    currentUserData = userDoc.data();
+                } else {
+                    currentUserData = { username: user.email.split('@')[0], profilePictureUrl: '', isVerified: false };
+                }
+
+                postId = getQueryParam('postId');
+                if (postId) {
+                    // Fetch post details to get postOwnerId
+                    const postDoc = await db.collection('posts').doc(postId).get();
+                    if (postDoc.exists) {
+                        postOwnerId = postDoc.data().userId;
+                    }
+
+                    displayPostCaption(postId);
+                    fetchAndDisplayComments(postId);
+                } else {
+                    commentsList.innerHTML = '<p class="no-comments-message">No post ID provided. Please go back to the home page.</p>';
+                    loadingCommentsMessage.style.display = 'none';
+                    postCaptionDisplay.style.display = 'none';
+                }
+            }
+        });
+
+        async function displayPostCaption(postId) {
+            try {
+                const postDoc = await db.collection('posts').doc(postId).get();
+                if (postDoc.exists) {
+                    const post = postDoc.data();
+                    const postUserDoc = await db.collection('users').doc(post.userId).get();
+                    const postUserData = postUserDoc.exists ? postUserDoc.data() : { username: 'Unknown User', isVerified: false };
+                    const postUsername = postUserData.username || 'Unknown User';
+                    const isPostUserVerified = postUserData.isVerified || false;
+                    const postCaption = post.caption || '';
+
+                    if (postCaption) {
+                        postCaptionDisplay.innerHTML = `
+                            <span class="username">${postUsername} ${isPostUserVerified ? verifiedSVG : ''}</span>
+                            <span>${postCaption}</span>
+                        `;
+                        postCaptionDisplay.style.display = 'block';
+                    } else {
+                        postCaptionDisplay.style.display = 'none';
+                    }
+                } else {
+                    postCaptionDisplay.style.display = 'none';
+                }
+            } catch (error) {
+                console.error("Error fetching post caption:", error);
+                postCaptionDisplay.style.display = 'none';
+            }
+        }
+
+
+        async function fetchAndDisplayComments(postId) {
+            loadingCommentsMessage.textContent = 'Loading comments...';
+            loadingCommentsMessage.style.display = 'block';
+            commentsList.innerHTML = ''; // Clear previous comments (except post caption)
+
+            try {
+                const commentsRef = db.collection('posts').doc(postId).collection('comments');
+                const commentsSnapshot = await commentsRef.orderBy('timestamp', 'asc').get();
+
+                if (commentsSnapshot.empty) {
+                    commentsList.innerHTML = '<p class="no-comments-message">No comments yet. Be the first to comment!</p>';
+                    return;
+                }
+
+                const allUserIds = new Set();
+                commentsSnapshot.forEach(commentDoc => {
+                    const comment = commentDoc.data();
+                    allUserIds.add(comment.userId);
+                });
+
+                const usersData = {};
+                if (allUserIds.size > 0) {
+                    const userDocs = await Promise.all(Array.from(allUserIds).map(uid => db.collection('users').doc(uid).get()));
+                    userDocs.forEach(userDoc => {
+                        if (userDoc.exists) {
+                            usersData[userDoc.id] = userDoc.data();
+                        } else {
+                            usersData[userDoc.id] = { username: 'Unknown User', profilePictureUrl: '', isVerified: false };
+                        }
+                    });
+                }
+
+                // Separate pinned comments from others
+                const comments = [];
+                const pinnedComments = [];
+                commentsSnapshot.forEach(commentDoc => {
+                    const comment = commentDoc.data();
+                    if (comment.isPinned) {
+                        pinnedComments.push({ id: commentDoc.id, data: comment });
+                    } else {
+                        comments.push({ id: commentDoc.id, data: comment });
+                    }
+                });
+
+                // Display pinned comments first
+                for (const { id: commentId, data: comment } of pinnedComments) {
+                    await renderComment(commentId, comment, usersData, commentsList, true);
+                }
+
+                // Display regular comments
+                for (const { id: commentId, data: comment } of comments) {
+                    await renderComment(commentId, comment, usersData, commentsList);
+                }
+
+            } catch (error) {
+                console.error("Error fetching comments:", error);
+                commentsList.innerHTML = '<p class="no-comments-message">Error loading comments. Please try again.</p>';
+            } finally {
+                loadingCommentsMessage.style.display = 'none';
+            }
+        }
+
+        async function renderComment(commentId, comment, usersData, appendToElement, isPinned = false) {
+            const commenterData = usersData[comment.userId] || { username: 'Unknown User', profilePictureUrl: '', isVerified: false };
+            const commenterUsername = commenterData.username;
+            const commenterAvatarUrl = commenterData.profilePictureUrl;
+            const isCommenterVerified = commenterData.isVerified || false;
+            const likedBy = comment.likedBy || [];
+            const hasLiked = likedBy.includes(currentUserId);
+            const commentLikesCount = likedBy.length;
+
+            let avatarHtml = '';
+            if (commenterAvatarUrl) {
+                avatarHtml = `<img src="${commenterAvatarUrl}" alt="User Avatar">`;
+            } else {
+                const firstLetter = (commenterUsername && commenterUsername.length > 0) ? commenterUsername.charAt(0).toUpperCase() : 'U';
+                avatarHtml = `<span>${firstLetter}</span>`;
+            }
+
+            const commentItem = document.createElement('div');
+            commentItem.classList.add('comment-item');
+            if (isPinned) {
+                commentItem.classList.add('pinned');
+            }
+            commentItem.setAttribute('data-commentid', commentId);
+            commentItem.innerHTML = `
+                <div class="avatar">${avatarHtml}</div>
+                <div class="comment-content">
+                    <div class="comment-header">
+                        <span class="username">${commenterUsername} ${isCommenterVerified ? verifiedSVG : ''}</span>
+                    </div>
+                    <p class="comment-text">${comment.text}</p>
+                    <div class="comment-actions">
+                        <i class="far fa-heart like-button ${hasLiked ? 'liked fas' : ''}" data-commentid="${commentId}"></i>
+                        <span class="comment-likes" id="commentLikes-${commentId}">${commentLikesCount > 0 ? `${commentLikesCount} likes` : ''}</span>
+                        <span class="reply-button" data-commentid="${commentId}" data-commenterusername="${commenterUsername}">Reply</span>
+                    </div>
+                </div>
+                <div class="comment-options-menu" data-commentid="${commentId}">
+                    <i class="fas fa-ellipsis-h"></i>
+                    <div class="comment-options-dropdown">
+                        ${currentUserId === comment.userId ? `<button class="edit-comment-btn" data-commentid="${commentId}" data-commenttext="${comment.text}">Edit</button>` : ''}
+                        ${currentUserId === comment.userId ? `<button class="delete-comment-btn" data-commentid="${commentId}">Delete</button>` : ''}
+                        ${currentUserId === postOwnerId && currentUserId !== comment.userId ?
+                            `<button class="pin-comment-btn" data-commentid="${commentId}" data-ispinned="${isPinned}">${isPinned ? 'Unpin Comment' : 'Pin Comment'}</button>` : ''}
+                        ${currentUserId === postOwnerId && currentUserId === comment.userId ?
+                            `<button class="pin-comment-btn" data-commentid="${commentId}" data-ispinned="${isPinned}">${isPinned ? 'Unpin My Comment' : 'Pin My Comment'}</button>` : ''}
+                    </div>
+                </div>
+            `;
+            appendToElement.appendChild(commentItem);
+
+            // Add Event Listeners for Like, Reply, Options Menu
+            const likeButton = commentItem.querySelector('.like-button');
+            if (likeButton) {
+                likeButton.addEventListener('click', async () => {
+                    await toggleCommentLike(postId, commentId, likeButton, appendToElement.querySelector(`#commentLikes-${commentId}`), comment.userId);
+                });
+            }
+
+            const replyButton = commentItem.querySelector('.reply-button');
+            if (replyButton) {
+                replyButton.addEventListener('click', () => {
+                    toggleReplyInput(commentItem, commenterUsername);
+                });
+            }
+
+            const optionsMenu = commentItem.querySelector('.comment-options-menu');
+            if (optionsMenu) {
+                optionsMenu.addEventListener('click', (event) => {
+                    // Close other open dropdowns
+                    document.querySelectorAll('.comment-options-dropdown.active').forEach(dropdown => {
+                        if (dropdown !== optionsMenu.querySelector('.comment-options-dropdown')) {
+                            dropdown.classList.remove('active');
+                        }
+                    });
+                    // Toggle current dropdown
+                    optionsMenu.querySelector('.comment-options-dropdown').classList.toggle('active');
+                    event.stopPropagation(); // Prevent closing immediately if clicked again
+                });
+            }
+
+            // Click outside to close dropdowns
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('.comment-options-menu')) {
+                    document.querySelectorAll('.comment-options-dropdown.active').forEach(dropdown => {
+                        dropdown.classList.remove('active');
+                    });
+                }
+            });
+
+            const deleteCommentBtn = commentItem.querySelector('.delete-comment-btn');
+            if (deleteCommentBtn) {
+                deleteCommentBtn.addEventListener('click', async () => {
+                    if (confirm('Are you sure you want to delete this comment? This will also delete all replies to it.')) {
+                        await deleteComment(postId, commentId);
+                    }
+                });
+            }
+
+            const editCommentBtn = commentItem.querySelector('.edit-comment-btn');
+            if (editCommentBtn) {
+                editCommentBtn.addEventListener('click', () => {
+                    // Placeholder for edit functionality
+                    alert('Edit comment functionality will be implemented here for comment: ' + commentId + ' with text: "' + editCommentBtn.dataset.commenttext + '"');
+                    // In a real app, you'd replace the comment text with an input field
+                    // and provide a save button.
+                    editComment(postId, commentId, editCommentBtn.dataset.commenttext); // Pass data for editing
+                });
+            }
+
+            const pinCommentBtn = commentItem.querySelector('.pin-comment-btn');
+            if (pinCommentBtn) {
+                pinCommentBtn.addEventListener('click', async () => {
+                    const isCurrentlyPinned = pinCommentBtn.dataset.ispinned === 'true';
+                    await togglePinComment(postId, commentId, !isCurrentlyPinned);
+                });
+            }
+
+            // Fetch and display replies for this comment
+            await fetchAndDisplayReplies(postId, commentId, commentItem, usersData);
+        }
+
+        async function fetchAndDisplayReplies(postId, parentCommentId, parentCommentItemElement, allUsersData) {
+            try {
+                const repliesSnapshot = await db.collection('posts').doc(postId).collection('comments').doc(parentCommentId).collection('replies')
+                                                .orderBy('timestamp', 'asc')
+                                                .get();
+
+                if (!repliesSnapshot.empty) {
+                    const repliesContainer = document.createElement('div');
+                    repliesContainer.classList.add('replies-container');
+
+                    repliesSnapshot.forEach(replyDoc => {
+                        const reply = replyDoc.data();
+                        const replyId = replyDoc.id;
+                        const replierData = allUsersData[reply.userId] || { username: 'Unknown User', profilePictureUrl: '', isVerified: false };
+                        const replierUsername = replierData.username;
+                        const replierAvatarUrl = replierData.profilePictureUrl;
+                        const isReplierVerified = replierData.isVerified || false;
+
+                        let avatarHtml = '';
+                        if (replierAvatarUrl) {
+                            avatarHtml = `<img src="${replierAvatarUrl}" alt="User Avatar">`;
+                        } else {
+                            const firstLetter = (replierUsername && replierUsername.length > 0) ? replierUsername.charAt(0).toUpperCase() : 'U';
+                            avatarHtml = `<span>${firstLetter}</span>`;
+                        }
+
+                        const replyItem = document.createElement('div');
+                        replyItem.classList.add('comment-item');
+                        replyItem.classList.add('reply-item');
+                        replyItem.setAttribute('data-replyid', replyId); // Add reply ID
+                        replyItem.setAttribute('data-parentcommentid', parentCommentId); // Add parent comment ID
+                        replyItem.innerHTML = `
+                            <div class="avatar">${avatarHtml}</div>
+                            <div class="comment-content">
+                                <div class="comment-header">
+                                    <span class="username">${replierUsername} ${isReplierVerified ? verifiedSVG : ''}</span>
+                                </div>
+                                <p class="comment-text">${reply.text}</p>
+                                <div class="comment-actions">
+                                    </div>
+                            </div>
+                            <div class="comment-options-menu" data-replyid="${replyId}" data-parentcommentid="${parentCommentId}">
+                                <i class="fas fa-ellipsis-h"></i>
+                                <div class="comment-options-dropdown">
+                                    ${currentUserId === reply.userId ? `<button class="delete-reply-btn" data-replyid="${replyId}" data-parentcommentid="${parentCommentId}">Delete</button>` : ''}
+                                    ${currentUserId === reply.userId ? `<button class="edit-reply-btn" data-replyid="${replyId}" data-parentcommentid="${parentCommentId}" data-replytext="${reply.text}">Edit</button>` : ''}
+                                </div>
+                            </div>
+                        `;
+                        repliesContainer.appendChild(replyItem);
+
+                        const replyOptionsMenu = replyItem.querySelector('.comment-options-menu');
+                        if (replyOptionsMenu) {
+                            replyOptionsMenu.addEventListener('click', (event) => {
+                                document.querySelectorAll('.comment-options-dropdown.active').forEach(dropdown => {
+                                    if (dropdown !== replyOptionsMenu.querySelector('.comment-options-dropdown')) {
+                                        dropdown.classList.remove('active');
+                                    }
+                                });
+                                replyOptionsMenu.querySelector('.comment-options-dropdown').classList.toggle('active');
+                                event.stopPropagation();
+                            });
+                        }
+
+                        const deleteReplyButton = replyItem.querySelector('.delete-reply-btn');
+                        if (deleteReplyButton) {
+                            deleteReplyButton.addEventListener('click', async () => {
+                                if (confirm('Are you sure you want to delete this reply?')) {
+                                    await deleteReply(postId, parentCommentId, replyId);
+                                }
+                            });
+                        }
+
+                        const editReplyBtn = replyItem.querySelector('.edit-reply-btn');
+                        if (editReplyBtn) {
+                            editReplyBtn.addEventListener('click', () => {
+                                alert('Edit reply functionality will be implemented here for reply: ' + replyId + ' with text: "' + editReplyBtn.dataset.replytext + '"');
+                                editReply(postId, parentCommentId, replyId, editReplyBtn.dataset.replytext);
+                            });
+                        }
+                    });
+                    parentCommentItemElement.querySelector('.comment-content').appendChild(repliesContainer);
+                }
+            } catch (error) {
+                console.error("Error fetching replies:", error);
+            }
+        }
+
+
+        // --- Comment Actions ---
+
+        async function toggleCommentLike(postId, commentId, likeButtonElement, likesDisplayElement, commentOwnerId) {
+            const commentRef = db.collection('posts').doc(postId).collection('comments').doc(commentId);
+            const commentDoc = await commentRef.get();
+            if (!commentDoc.exists) return;
+
+            const likedBy = commentDoc.data().likedBy || [];
+            const hasLiked = likedBy.includes(currentUserId);
+            let newLikesCount = likedBy.length;
+
+            try {
+                if (hasLiked) {
+                    await commentRef.update({
+                        likedBy: firebase.firestore.FieldValue.arrayRemove(currentUserId)
+                    });
+                    likeButtonElement.classList.remove('fas');
+                    likeButtonElement.classList.add('far'); // Change to outlined heart
+                    likeButtonElement.classList.remove('liked');
+                    newLikesCount--;
+                    console.log(`Comment ${commentId} unliked!`);
+                } else {
+                    await commentRef.update({
+                        likedBy: firebase.firestore.FieldValue.arrayUnion(currentUserId)
+                    });
+                    likeButtonElement.classList.remove('far');
+                    likeButtonElement.classList.add('fas'); // Change to filled heart
+                    likeButtonElement.classList.add('liked');
+                    newLikesCount++;
+                    console.log(`Comment ${commentId} liked!`);
+                    if (currentUserId !== commentOwnerId) {
+                        await addNotification('comment_like', commentOwnerId, postId, commentDoc.data().text, commentId);
+                    }
+                }
+                likesDisplayElement.textContent = newLikesCount > 0 ? `${newLikesCount} likes` : '';
+            } catch (error) {
+                console.error("Error toggling comment like:", error);
+            }
+        }
+
+        function toggleReplyInput(commentItemElement, commenterUsername) {
+            document.querySelectorAll('.reply-input-section').forEach(el => el.remove());
+
+            const replyInputSection = document.createElement('div');
+            replyInputSection.classList.add('reply-input-section');
+            replyInputSection.innerHTML = `
+                <input type="text" placeholder="Replying to ${commenterUsername}...">
+                <button>Post</button>
+            `;
+            commentItemElement.querySelector('.comment-content').appendChild(replyInputSection);
+            replyInputSection.querySelector('input').focus();
+
+            replyInputSection.querySelector('button').addEventListener('click', async () => {
+                const replyText = replyInputSection.querySelector('input').value.trim();
+                const commentIdToReply = commentItemElement.dataset.commentid;
+
+                if (replyText) {
+                    await addReply(postId, commentIdToReply, replyText, commenterUsername);
+                } else {
+                    alert('Please write a reply.');
+                }
+            });
+        }
+
+        async function addReply(postId, parentCommentId, replyText, targetUsername) {
+            if (!currentUserId || !currentUserData) {
+                alert('You must be logged in to reply.');
+                return;
+            }
+
+            try {
+                const newReplyRef = await db.collection('posts').doc(postId).collection('comments').doc(parentCommentId).collection('replies').add({
+                    userId: currentUserId,
+                    text: `@${targetUsername} ${replyText}`,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('Reply added successfully!');
+
+                const parentCommentDoc = await db.collection('posts').doc(postId).collection('comments').doc(parentCommentId).get();
+                if (parentCommentDoc.exists) {
+                    const commentOwnerId = parentCommentDoc.data().userId;
+                    await addNotification('reply', commentOwnerId, postId, replyText, parentCommentId);
+                }
+
+                fetchAndDisplayComments(postId);
+            } catch (error) {
+                console.error("Error adding reply:", error);
+                alert('Error posting reply.');
+            }
+        }
+
+        async function editComment(postId, commentId, currentText) {
+            // This is a placeholder. A full implementation would involve:
+            // 1. Replacing the comment's <p class="comment-text"> with an <input type="text"> or <textarea>.
+            // 2. Pre-filling the input with `currentText`.
+            // 3. Adding a "Save" button or handling Enter key press.
+            // 4. On save, update the comment in Firestore:
+            //    await db.collection('posts').doc(postId).collection('comments').doc(commentId).update({ text: newText });
+            // 5. Re-render comments to show the updated text.
+            console.log(`Editing comment ${commentId}. Current text: "${currentText}"`);
+            alert("Edit feature coming soon! You would typically see an input field here to change the comment text.");
+        }
+
+        async function editReply(postId, parentCommentId, replyId, currentText) {
+            // Similar to editComment, this is a placeholder.
+            console.log(`Editing reply ${replyId}. Current text: "${currentText}"`);
+            alert("Edit reply feature coming soon! You would typically see an input field here to change the reply text.");
+        }
+
+        async function deleteComment(postId, commentId) {
+            try {
+                const repliesSnapshot = await db.collection('posts').doc(postId).collection('comments').doc(commentId).collection('replies').get();
+                const deleteReplyPromises = [];
+                repliesSnapshot.forEach(replyDoc => {
+                    deleteReplyPromises.push(replyDoc.ref.delete());
+                });
+                await Promise.all(deleteReplyPromises);
+
+                await db.collection('posts').doc(postId).collection('comments').doc(commentId).delete();
+
+                console.log(`Comment ${commentId} and its replies deleted successfully!`);
+                fetchAndDisplayComments(postId);
+            } catch (error) {
+                console.error("Error deleting comment:", error);
+                alert('Error deleting comment.');
+            }
+        }
+
+        async function deleteReply(postId, parentCommentId, replyId) {
+            try {
+                await db.collection('posts').doc(postId).collection('comments').doc(parentCommentId).collection('replies').doc(replyId).delete();
+                console.log(`Reply ${replyId} deleted successfully!`);
+                fetchAndDisplayComments(postId);
+            } catch (error) {
+                console.error("Error deleting reply:", error);
+                alert('Error deleting reply.');
+            }
+        }
+
+        async function togglePinComment(postId, commentId, pinStatus) {
+            if (currentUserId !== postOwnerId) {
+                alert('Only the post owner can pin/unpin comments.');
+                return;
+            }
+            try {
+                await db.collection('posts').doc(postId).collection('comments').doc(commentId).update({
+                    isPinned: pinStatus
+                });
+                console.log(`Comment ${commentId} ${pinStatus ? 'pinned' : 'unpinned'} successfully!`);
+                fetchAndDisplayComments(postId); // Re-render to show pinned status at top
+            } catch (error) {
+                console.error("Error toggling pin status:", error);
+                alert('Error changing pin status.');
+            }
+        }
+
+        // Event listener for posting a new comment (main input)
+        postCommentBtn.addEventListener('click', async () => {
+            const commentText = newCommentInput.value.trim();
+            if (!commentText) {
+                alert('Please write a comment.');
+                return;
+            }
+            if (!currentUserId || !postId) {
+                alert('Error: User not logged in or post ID missing.');
+                return;
+            }
+
+            try {
+                const newCommentRef = await db.collection('posts').doc(postId).collection('comments').add({
+                    userId: currentUserId,
+                    text: commentText,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    likedBy: [],
+                    isPinned: false // New field for pinning
+                });
+                newCommentInput.value = '';
+
+                const postDoc = await db.collection('posts').doc(postId).get();
+                if (postDoc.exists) {
+                    const ownerId = postDoc.data().userId;
+                    if (currentUserId !== ownerId) {
+                        await addNotification('comment', ownerId, postId, commentText, newCommentRef.id);
+                    }
+                }
+
+                fetchAndDisplayComments(postId);
+            } catch (error) {
+                console.error("Error adding comment:", error);
+                alert('Error posting comment.');
+            }
+        });
+    </script>
+</body>
+</html>

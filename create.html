@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Post</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Global Styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: #121212; /* Dark background */
+            color: #f5f5f5; /* Light text for dark theme */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background-color: #1a1a1a;
+            border-bottom: 1px solid #262626;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header .logo {
+            font-family: 'Billabong', cursive;
+            font-size: 28px;
+            color: #f5f5f5;
+            text-decoration: none;
+        }
+
+        @font-face {
+            font-family: 'Billabong';
+            src: url('https://raw.githubusercontent.com/s6n/instagram-font/master/Billabong.ttf') format('truetype');
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            padding: 20px 15px;
+            box-sizing: border-box;
+        }
+
+        .create-post-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .create-post-container h2 {
+            color: #f5f5f5;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+            width: 100%;
+            height: 200px;
+            border: 2px dashed #363636;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .file-input-wrapper:hover {
+            background-color: #2a2a2a;
+            border-color: #0095f6;
+        }
+
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-input-wrapper .select-text {
+            color: #0095f6;
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        .file-input-wrapper i {
+            font-size: 50px;
+            color: #b3b3b3;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 400px;
+            display: none;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            object-fit: contain;
+            background-color: #000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 25px;
+            border: 1px solid #363636;
+            border-radius: 8px;
+            background-color: #262626;
+            color: #f5f5f5;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 100px; /* Only for textarea */
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #0095f6;
+            box-shadow: 0 0 0 2px rgba(0, 149, 246, 0.3);
+        }
+
+        textarea::placeholder, input[type="text"]::placeholder {
+            color: #8e8e8e;
+        }
+
+        /* Collaborator Section */
+        .collaborators-section {
+            width: 100%;
+            margin-bottom: 25px;
+            position: relative; /* For dropdown positioning */
+        }
+
+        .collaborators-section label {
+            display: block;
+            color: #f5f5f5;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .selected-collaborators {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+            min-height: 30px; /* Ensure space even if no collaborators */
+        }
+
+        .collaborator-tag {
+            background-color: #0095f6;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .collaborator-tag .remove-collaborator {
+            margin-left: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+            transition: color 0.2s ease;
+        }
+
+        .collaborator-tag .remove-collaborator:hover {
+            color: white;
+        }
+
+        .user-search-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #363636;
+            border-radius: 8px;
+            background-color: #262626;
+            color: #f5f5f5;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .search-results-dropdown {
+            position: absolute;
+            top: 100%; /* Position below the input */
+            left: 0;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: #262626;
+            border: 1px solid #363636;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            display: none; /* Hidden by default */
+        }
+
+        .search-results-dropdown.show {
+            display: block;
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .search-result-item:hover {
+            background-color: #333333;
+        }
+
+        .search-result-item .profile-pic-small {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #363636;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .search-result-item .profile-pic-small img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .search-result-item .profile-pic-small .initials {
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .search-result-item .username-display {
+            color: #f5f5f5;
+            font-weight: bold;
+            font-size: 15px;
+            flex-grow: 1;
+        }
+
+        .search-result-item .username-display .verified-badge {
+            width: 14px;
+            height: 14px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+
+        button {
+            width: 100%;
+            padding: 14px 0;
+            background-color: #0095f6;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease, opacity 0.2s ease;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #007acb;
+        }
+
+        button:disabled {
+            background-color: #004d77;
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .status-message {
+            margin-top: 20px;
+            font-size: 15px;
+            color: #e0e0e0;
+            display: none;
+            text-align: center;
+        }
+        .status-message.error {
+            color: #ed4956;
+        }
+        .status-message.success {
+            color: #3897f0;
+        }
+        .status-message.info {
+            color: #a0a0a0;
+        }
+
+
+        /* Footer Navigation (Consistent with home.html and profile.html) */
+        .footer {
+            background-color: #1a1a1a;
+            border-top: 1px solid #262626;
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: sticky;
+            bottom: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .footer .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #f5f5f5;
+            font-size: 22px;
+            transition: color 0.2s ease;
+            flex-basis: 20%;
+            text-align: center;
+        }
+
+        .footer .nav-item i {
+            margin-bottom: 3px;
+        }
+
+        /* Profile picture in footer */
+        .footer .profile-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: #b3b3b3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            overflow: hidden;
+            margin-bottom: 3px;
+            border: 2px solid transparent; /* Added this for consistency */
+        }
+
+        .footer .profile-circle.has-image {
+            border-color: #f5f5f5;
+        }
+
+        .footer .profile-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .footer .nav-item.active {
+            color: #0095f6;
+        }
+
+        .footer .nav-item:hover {
+            color: #8e8e8e;
+        }
+
+        .footer .nav-item.active .profile-circle {
+            border-color: #0095f6;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+            .header .logo {
+                font-size: 24px;
+            }
+            .main-content {
+                padding: 15px;
+            }
+            .create-post-container {
+                padding: 20px;
+            }
+            .file-input-wrapper {
+                height: 180px;
+            }
+            .file-input-wrapper i {
+                font-size: 45px;
+            }
+            .file-input-wrapper .select-text {
+                font-size: 15px;
+            }
+            .image-preview {
+                max-height: 350px;
+            }
+            textarea, input[type="text"] {
+                font-size: 15px;
+            }
+            textarea {
+                min-height: 90px;
+            }
+            button {
+                font-size: 17px;
+                padding: 13px 0;
+            }
+            .status-message {
+                font-size: 14px;
+            }
+            .footer .nav-item {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header .logo {
+                font-size: 22px;
+            }
+            .main-content {
+                padding: 10px;
+            }
+            .create-post-container {
+                padding: 15px;
+            }
+            .file-input-wrapper {
+                height: 150px;
+                border-radius: 10px;
+            }
+            .file-input-wrapper i {
+                font-size: 40px;
+            }
+            .file-input-wrapper .select-text {
+                font-size: 14px;
+            }
+            .image-preview {
+                max-height: 300px;
+            }
+            textarea, input[type="text"] {
+                font-size: 14px;
+            }
+            textarea {
+                min-height: 80px;
+            }
+            button {
+                font-size: 16px;
+                padding: 12px 0;
+            }
+            .status-message {
+                font-size: 13px;
+            }
+            .footer .nav-item {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="home.html" class="logo">Bluenote</a>
+    </div>
+
+    <div class="main-content">
+        <div class="create-post-container">
+            <h2>New Post</h2>
+            <div class="file-input-wrapper" id="fileInputWrapper">
+                <i class="fas fa-image" id="fileInputIcon"></i>
+                <span class="select-text" id="fileInputText">Select Image</span>
+                <input type="file" id="imageInput" accept="image/*">
+            </div>
+            <img id="imagePreview" class="image-preview" src="#" alt="Image Preview">
+            <textarea id="captionInput" placeholder="Write a caption..."></textarea>
+
+            <div class="collaborators-section">
+                <label for="collaboratorSearch">Invite Collaborators (Optional)</label>
+                <div class="selected-collaborators" id="selectedCollaborators">
+                    </div>
+                <input type="text" id="collaboratorSearch" class="user-search-input" placeholder="Search users by username">
+                <div class="search-results-dropdown" id="searchResultsDropdown">
+                    </div>
+            </div>
+            <button id="postBtn" disabled>Post</button>
+            <p id="statusMessage" class="status-message"></p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <a href="home.html" class="nav-item" id="homeLink">
+            <i class="fas fa-home"></i>
+        </a>
+        <a href="search.html" class="nav-item" id="searchLink">
+            <i class="fas fa-search"></i>
+        </a>
+        <a href="create.html" class="nav-item active" id="createPostLink">
+            <i class="fas fa-plus-square"></i>
+        </a>
+        <a href="notifications.html" class="nav-item" id="notificationsLink">
+            <i class="fas fa-heart"></i>
+        </a>
+        <a href="profile.html" class="nav-item" id="profileLink">
+            <div class="profile-circle" id="footerProfileCircle">
+                </div>
+        </a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-storage-compat.js"></script>
+
+    <script>
+        // Your Firebase project configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdu3d0_qEDZaXkBkJAO0VY0htme6_EMyM",
+            authDomain: "bluegram-27a79.firebaseapp.com",
+            databaseURL: "https://bluegram-27a79-default-rtdb.firebaseio.com",
+            projectId: "bluegram-27a79",
+            storageBucket: "bluegram-27a79.firebasestorage.app",
+            messagingSenderId: "780485443121",
+            appId: "1:780485443121:web:f7469d2264293fcbdf5f10",
+            measurementId: "G-YF5S9HK2Q5"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ImgBB API Key
+        const IMGBB_API_KEY = '7184e56bb0953c0545409c441c402a66'; // Your provided key
+
+        // Elements
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const captionInput = document.getElementById('captionInput');
+        const postBtn = document.getElementById('postBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const fileInputIcon = document.getElementById('fileInputIcon');
+        const fileInputText = document.getElementById('fileInputText');
+
+        const collaboratorSearchInput = document.getElementById('collaboratorSearch');
+        const selectedCollaboratorsContainer = document.getElementById('selectedCollaborators');
+        const searchResultsDropdown = document.getElementById('searchResultsDropdown');
+
+        const footerProfileCircle = document.getElementById('footerProfileCircle'); // Get the footer profile circle element
+
+        let selectedFile = null;
+        let selectedCollaborators = {}; // Store {userId: {username, profilePictureUrl, isVerified}}
+        let currentUserData = null; // Store current user's data
+
+        // SVG for the verified badge (same as profile.html)
+        const verifiedSVG = `<svg class="verified-badge" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 256 256" xml:space="preserve">
+            <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                <polygon points="45,6.18 57.06,0 64.41,11.38 77.94,12.06 78.62,25.59 90,32.94 83.82,45 90,57.06 78.62,64.41 77.94,77.94 64.41,78.62 57.06,90 45,83.82 32.94,90 25.59,78.62 12.06,77.94 11.38,64.41 0,57.06 6.18,45 0,32.94 11.38,25.59 12.06,12.06 25.59,11.38 12.06,12.06 25.59,11.38 32.94,0 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; fill: rgb(0,150,241); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+                <polygon points="40.16,58.47 26.24,45.08 29.7,41.48 40.15,51.52 61.22,31.08 64.7,34.67 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+            </g>
+        </svg>`;
+
+        // Function to update the footer profile picture
+        function updateFooterProfilePicture(profilePictureUrl, username) {
+            footerProfileCircle.innerHTML = ''; // Clear previous content
+            footerProfileCircle.classList.remove('has-image'); // Remove class initially
+            
+            if (profilePictureUrl) {
+                const img = document.createElement('img');
+                img.src = profilePictureUrl;
+                img.alt = 'Profile Picture';
+                footerProfileCircle.appendChild(img);
+                footerProfileCircle.classList.add('has-image'); // Add class to show border
+            } else {
+                const firstLetter = (username && username.length > 0) ? username.charAt(0).toUpperCase() : 'P';
+                footerProfileCircle.textContent = firstLetter;
+                footerProfileCircle.classList.remove('has-image'); // Ensure no border if no image
+            }
+        }
+
+        // Check user authentication
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                console.log('User not logged in. Redirecting to login.html.');
+                window.location.href = 'login.html';
+            } else {
+                console.log('User logged in:', user.email, 'UID:', user.uid);
+                // Fetch user data to update footer profile picture and store for collaborators
+                try {
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    if (userDoc.exists) {
+                        currentUserData = { ...userDoc.data(), uid: user.uid };
+                        updateFooterProfilePicture(currentUserData.profilePictureUrl, currentUserData.username || user.email);
+                    } else {
+                        // If user document doesn't exist, create it with default values for current user
+                        await db.collection('users').doc(user.uid).set({
+                            username: user.email.split('@')[0], // Default username from email
+                            isVerified: false,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            postsCount: 0,
+                            followersCount: 0,
+                            followingCount: 0,
+                            profilePictureUrl: ''
+                        }, { merge: true }); // Use merge to avoid overwriting if partial exists
+
+                        currentUserData = {
+                            uid: user.uid,
+                            username: user.email.split('@')[0],
+                            isVerified: false,
+                            profilePictureUrl: ''
+                        };
+                        updateFooterProfilePicture(currentUserData.profilePictureUrl, currentUserData.username);
+                        console.log('New user document created for current user:', currentUserData.username);
+                    }
+                } catch (error) {
+                    console.error("Error fetching/creating user data for footer or current user:", error);
+                    updateFooterProfilePicture(null, user.email); // Fallback
+                }
+            }
+        });
+
+        // Image input change listener
+        imageInput.addEventListener('change', (event) => {
+            selectedFile = event.target.files[0];
+            if (selectedFile) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    // Hide icon and text when image is selected
+                    fileInputIcon.style.display = 'none';
+                    fileInputText.style.display = 'none';
+                    postBtn.disabled = false;
+                };
+                reader.readAsDataURL(selectedFile);
+            } else {
+                imagePreview.src = '#';
+                imagePreview.style.display = 'none';
+                // Show icon and text if no image is selected
+                fileInputIcon.style.display = 'block';
+                fileInputText.style.display = 'block';
+                postBtn.disabled = true;
+            }
+        });
+
+        // Debounce function for search input
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        }
+
+        // Search for users
+        const searchUsers = debounce(async (query) => {
+            searchResultsDropdown.innerHTML = ''; // Clear previous results
+            searchResultsDropdown.classList.remove('show');
+
+            if (query.length < 2) { // Require at least 2 characters to search
+                return;
+            }
+
+            const currentUserUID = auth.currentUser ? auth.currentUser.uid : null;
+            if (!currentUserUID) return;
+
+            try {
+                // Perform a case-insensitive search
+                const usersRef = db.collection('users');
+                const querySnapshot = await usersRef
+                    .where('username', '>=', query)
+                    .where('username', '<=', query + '\uf8ff')
+                    .limit(10) // Limit results for performance
+                    .get();
+
+                if (querySnapshot.empty) {
+                    searchResultsDropdown.innerHTML = '<div class="search-result-item" style="justify-content: center; color: #8e8e8e;">No users found.</div>';
+                    searchResultsDropdown.classList.add('show');
+                    return;
+                }
+
+                querySnapshot.forEach(doc => {
+                    const userData = doc.data();
+                    const userId = doc.id;
+
+                    // Don't show current user or already selected collaborators
+                    if (userId === currentUserUID || selectedCollaborators[userId]) {
+                        return;
+                    }
+
+                    const resultItem = document.createElement('div');
+                    resultItem.classList.add('search-result-item');
+                    resultItem.setAttribute('data-user-id', userId);
+                    resultItem.setAttribute('data-username', userData.username);
+                    resultItem.setAttribute('data-profile-pic', userData.profilePictureUrl || '');
+                    resultItem.setAttribute('data-is-verified', userData.isVerified || false);
+
+                    const profilePicHtml = userData.profilePictureUrl ?
+                        `<img src="${userData.profilePictureUrl}" alt="${userData.username}'s profile pic">` :
+                        `<span class="initials">${userData.username.charAt(0).toUpperCase()}</span>`;
+
+                    const verifiedBadgeHtml = userData.isVerified ? verifiedSVG : '';
+
+                    resultItem.innerHTML = `
+                        <div class="profile-pic-small">
+                            ${profilePicHtml}
+                        </div>
+                        <span class="username-display">
+                            ${userData.username}
+                            ${verifiedBadgeHtml}
+                        </span>
+                    `;
+                    resultItem.addEventListener('click', () => selectCollaborator(userId, userData));
+                    searchResultsDropdown.appendChild(resultItem);
+                });
+
+                if (searchResultsDropdown.children.length > 0) {
+                     searchResultsDropdown.classList.add('show');
+                } else {
+                    searchResultsDropdown.innerHTML = '<div class="search-result-item" style="justify-content: center; color: #8e8e8e;">No users found.</div>';
+                    searchResultsDropdown.classList.add('show');
+                }
+
+            } catch (error) {
+                console.error("Error searching users:", error);
+                searchResultsDropdown.innerHTML = '<div class="search-result-item" style="justify-content: center; color: #ed4956;">Error searching.</div>';
+                searchResultsDropdown.classList.add('show');
+            }
+        }, 300); // 300ms debounce
+
+        collaboratorSearchInput.addEventListener('input', (event) => {
+            searchUsers(event.target.value);
+        });
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.collaborators-section')) {
+                searchResultsDropdown.classList.remove('show');
+            }
+        });
+
+        function selectCollaborator(userId, userData) {
+            if (selectedCollaborators[userId]) {
+                showStatus(`${userData.username} is already selected.`, 'info');
+                return;
+            }
+            if (Object.keys(selectedCollaborators).length >= 5) { // Limit to 5 collaborators
+                showStatus('You can invite a maximum of 5 collaborators per post.', 'info');
+                return;
+            }
+
+            selectedCollaborators[userId] = {
+                username: userData.username,
+                profilePictureUrl: userData.profilePictureUrl || '',
+                isVerified: userData.isVerified || false
+            };
+            renderSelectedCollaborators();
+            collaboratorSearchInput.value = ''; // Clear search input
+            searchResultsDropdown.classList.remove('show'); // Hide dropdown
+        }
+
+        function removeCollaborator(userId) {
+            delete selectedCollaborators[userId];
+            renderSelectedCollaborators();
+        }
+
+        function renderSelectedCollaborators() {
+            selectedCollaboratorsContainer.innerHTML = '';
+            for (const userId in selectedCollaborators) {
+                const collab = selectedCollaborators[userId];
+                const collabTag = document.createElement('span');
+                collabTag.classList.add('collaborator-tag');
+                collabTag.innerHTML = `
+                    ${collab.username}
+                    <i class="fas fa-times remove-collaborator" data-user-id="${userId}"></i>
+                `;
+                collabTag.querySelector('.remove-collaborator').addEventListener('click', () => removeCollaborator(userId));
+                selectedCollaboratorsContainer.appendChild(collabTag);
+            }
+        }
+
+
+        // Post button click listener
+        postBtn.addEventListener('click', async () => {
+            if (!selectedFile) {
+                showStatus('Please select an image to post.', 'error');
+                return;
+            }
+
+            const caption = captionInput.value.trim();
+            const currentUser = auth.currentUser;
+
+            if (!currentUser || !currentUserData) {
+                showStatus('You must be logged in to post.', 'error');
+                console.error('Post failed: No current user data detected.');
+                return;
+            }
+
+            postBtn.disabled = true;
+            showStatus('Uploading image...', 'info');
+            console.log('Attempting to upload image for user ID:', currentUser.uid);
+
+            try {
+                // 1. Upload image to ImgBB
+                const formData = new FormData();
+                formData.append('image', selectedFile);
+
+                const imgbbResponse = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const imgbbData = await imgbbResponse.json();
+
+                if (imgbbData.success) {
+                    const imageUrl = imgbbData.data.url;
+                    console.log('Image uploaded to ImgBB successfully. URL:', imageUrl);
+                    showStatus('Image uploaded. Saving post...', 'info');
+
+                    // Prepare collaborators for Firestore:
+                    // 'collaboratorInvites' will be an array of objects for managing invites
+                    // 'acceptedCollaborators' will be a simple array of user IDs
+                    const collaboratorInvites = Object.keys(selectedCollaborators).map(userId => ({
+                        userId: userId,
+                        status: 'pending' // 'pending', 'accepted', 'rejected'
+                    }));
+
+                    // Add the original poster's ID to acceptedCollaborators by default
+                    // This is crucial for `home.html` to correctly display the main poster's name
+                    // as part of the collaboration line if they are the only "collaborator" listed,
+                    // or to ensure their post shows up under their name even with other collaborators.
+                    const acceptedCollabUserIds = [currentUser.uid]; 
+
+                    const postData = {
+                        userId: currentUser.uid, // Original poster
+                        username: currentUserData.username,
+                        profilePictureUrl: currentUserData.profilePictureUrl || '', // Store poster's profile pic
+                        isVerified: currentUserData.isVerified || false, // Store poster's verified status
+                        imageUrl: imageUrl, // Use ImgBB URL
+                        caption: caption,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        likes: 0,
+                        likedBy: [],
+                        comments: [],
+                        // IMPORTANT: Changed how 'collaborators' is stored. 
+                        // It now holds the IDs of ALL potential collaborators (including the poster themselves)
+                        // who have either been invited or are the original poster.
+                        // This matches what `home.html` expects for display.
+                        collaborators: [...Object.keys(selectedCollaborators), currentUser.uid], 
+                        collaborationInvites: collaboratorInvites, // Keep this for managing invites status
+                        acceptedCollaborators: acceptedCollabUserIds, // Only accepted collaborators (initially just the poster)
+                    };
+
+                    console.log('Attempting to save post data to Firestore:', postData);
+                    const docRef = await db.collection('posts').add(postData);
+                    const postId = docRef.id;
+                    console.log('Post data saved to Firestore successfully with ID:', postId);
+
+                    // 3. Increment postsCount for the original poster
+                    const userDocRef = db.collection('users').doc(currentUser.uid);
+                    await userDocRef.update({
+                        postsCount: firebase.firestore.FieldValue.increment(1)
+                    });
+                    console.log('Original poster postsCount incremented.');
+
+                    // 4. Send collaboration notifications to *invited* users
+                    for (const collab of collaboratorInvites) { // Iterate through the invites, not all collaborators
+                        if (collab.userId !== currentUser.uid) { // Ensure not sending notification to self
+                            await db.collection('notifications').add({
+                                type: 'collaboration_request',
+                                actorUserId: currentUser.uid, // The user who invited
+                                targetUserId: collab.userId, // The user being invited
+                                postId: postId,
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                read: false,
+                                status: 'pending', // Status of the invite itself
+                                actorUsername: currentUserData.username // Add actor's username for display
+                            });
+                            console.log(`Collaboration invite sent to ${collab.userId}`);
+                        }
+                    }
+
+                    showStatus('Post created and collaborators invited successfully!', 'success');
+
+                    // Clear form and redirect or update UI
+                    selectedFile = null;
+                    imageInput.value = '';
+                    imagePreview.src = '#';
+                    imagePreview.style.display = 'none';
+                    captionInput.value = '';
+                    selectedCollaborators = {}; // Clear selected collaborators
+                    renderSelectedCollaborators(); // Update UI
+                    postBtn.disabled = true;
+
+                    // Restore file input display
+                    fileInputIcon.style.display = 'block';
+                    fileInputText.style.display = 'block';
+
+                    setTimeout(() => {
+                        window.location.href = 'home.html'; // Redirect to home or profile
+                    }, 1500);
+                } else {
+                    console.error("ImgBB upload failed:", imgbbData.error.message);
+                    showStatus('Image upload failed: ' + (imgbbData.error.message || 'Unknown error'), 'error');
+                    postBtn.disabled = false;
+                }
+
+            } catch (error) {
+                console.error("Error creating post:", error);
+                showStatus('Error creating post: ' + error.message, 'error');
+                postBtn.disabled = false;
+            }
+        });
+
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message ' + type;
+            statusMessage.style.display = 'block';
+            // Optionally hide after some time
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // Footer navigation logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const navItems = document.querySelectorAll('.footer .nav-item');
+            const currentPath = window.location.pathname.split('/').pop();
+
+            navItems.forEach(item => {
+                const itemHref = item.getAttribute('href').split('/').pop();
+                if (itemHref === currentPath) {
+                    item.classList.add('active');
+                }
+
+                item.addEventListener('click', function(event) {
+                    if (this.classList.contains('active')) {
+                        event.preventDefault();
+                    }
+                });
+            });
+
+            // Initial call to update footer profile picture (before onAuthStateChanged resolves)
+            // This ensures it appears quickly if user is already logged in and data is cached.
+            // onAuthStateChanged will update it again with fresh data.
+            auth.currentUser ? updateFooterProfilePicture(null, auth.currentUser.email) : updateFooterProfilePicture(null, 'U');
+        });
+    </script>
+</body>
+</html>
