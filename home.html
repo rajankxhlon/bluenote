@@ -1,0 +1,2012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Global Styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: #121212; /* Dark background */
+            color: #f5f5f5; /* Light text for dark theme */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background-color: #1a1a1a;
+            border-bottom: 1px solid #262626;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header .logo {
+            font-family: 'Billabong', cursive;
+            font-size: 28px;
+            color: #f5f5f5;
+            text-decoration: none;
+        }
+
+        @font-face {
+            font-family: 'Billabong';
+            src: url('https://raw.githubusercontent.com/s6n/instagram-font/master/Billabong.ttf') format('truetype');
+        }
+
+        /* Header actions on the right */
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px; /* Space between icons */
+        }
+
+        .header-actions .header-icon {
+            font-size: 24px;
+            color: #f5f5f5;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .header-actions .header-icon:hover {
+            opacity: 0.7;
+        }
+
+        /* Stories Section */
+        .stories-container {
+            background-color: #1a1a1a;
+            padding: 15px 10px;
+            border-bottom: 1px solid #262626;
+            display: flex;
+            overflow-x: scroll; /* Enable horizontal scrolling */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            scrollbar-width: none; /* Hide scrollbar for Firefox */
+            -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
+            gap: 15px; /* Space between story circles */
+        }
+
+        /* Hide scrollbar for Chrome, Safari, Opera */
+        .stories-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .story-circle {
+            flex-shrink: 0; /* Prevent circles from shrinking */
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); /* Instagram gradient */
+            padding: 2px; /* Border thickness */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            box-sizing: border-box; /* Include padding in width/height */
+            transition: background 0.3s ease; /* Smooth transition for background change */
+        }
+
+        .story-circle.seen {
+            background: #4a4a4a; /* Grey for seen stories */
+        }
+
+        .story-avatar {
+            width: 64px; /* Avatar size inside the border */
+            height: 64px;
+            border-radius: 50%;
+            background-color: #262626; /* Inner background */
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px; /* For first letter fallback */
+            font-weight: bold;
+            color: #f5f5f5;
+            border: 2px solid #1a1a1a; /* To create a gap between border and image */
+        }
+
+        .story-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .story-username {
+            text-align: center;
+            font-size: 12px;
+            color: #f5f5f5;
+            margin-top: 5px;
+            max-width: 80px; /* Limit username width */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .story-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative; /* For positioning the plus icon */
+        }
+
+        /* Add Story specific styles */
+        .add-story-plus-icon {
+            position: absolute;
+            bottom: 15px; /* Adjusted to be slightly above the bottom of the circle */
+            right: 0;
+            left: 0;
+            margin: 0 auto;
+            background-color: #0095f6;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 16px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #1a1a1a; /* Matches container background */
+            transform: translateY(50%); /* Adjust based on new bottom */
+            z-index: 5; /* Ensure it's above the username text */
+            cursor: pointer; /* Make the plus icon clickable */
+        }
+
+        /* Always show the plus icon on your story if it's the "Add Story" option */
+        .story-item.your-story .add-story-plus-icon {
+            display: flex; /* Ensure it's visible */
+        }
+
+        /* Adjust "Your Story" username position (now hidden) */
+        .story-item.your-story .story-username {
+            display: none; /* Hide the "Your Story" text */
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            padding: 30px 20px;
+            padding-top: 20px; /* Adjust top padding due to stories */
+        }
+
+        .feed-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 0;
+            box-sizing: border-box;
+            color: #b3b3b3;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Styles for individual posts */
+        .post-card {
+            background-color: #262626;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative; /* Added for three dots positioning */
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            justify-content: space-between;
+        }
+
+        .post-header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .post-header .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #b3b3b3;
+            margin-right: 10px;
+            overflow: hidden;
+            flex-shrink: 0; /* Prevent avatar from shrinking */
+            display: flex; /* For first letter fallback */
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .post-header .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .post-header .username {
+            font-weight: bold;
+            color: #f5f5f5;
+            display: flex; /* Allow inline elements like SVG */
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Styling for the username link */
+        .post-header .username a,
+        .post-caption .username a {
+            color: inherit; /* Inherit color from parent */
+            text-decoration: none; /* Remove underline */
+        }
+
+        .post-header .username a:hover,
+        .post-caption .username a:hover {
+            text-decoration: underline; /* Add underline on hover */
+        }
+
+
+        .verified-badge {
+            width: 16px; /* Adjust size as needed */
+            height: 16px;
+            margin-left: 5px; /* Space between username and tick */
+            vertical-align: middle; /* Align with text baseline */
+            flex-shrink: 0; /* Prevent badge from shrinking */
+        }
+
+        .follow-button {
+            background: none;
+            border: 1px solid transparent; /* Default transparent border */
+            color: #0095f6; /* Instagram blue */
+            font-weight: bold;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: all 0.2s ease; /* Smooth transition for all properties */
+            margin-left: 10px;
+            font-size: 14px;
+            flex-shrink: 0; /* Prevent button from shrinking */
+        }
+
+        .follow-button:hover {
+            opacity: 0.8;
+        }
+
+        .follow-button.following {
+            background-color: #363636; /* Dark grey background for following */
+            color: #f5f5f5; /* White text for following */
+            border-color: #8e8e8e; /* Grey border for following */
+        }
+
+        .follow-button.following:hover {
+            background-color: #ed4956; /* Red background on hover for unfollow */
+            color: #f5f5f5;
+            border-color: #ed4956;
+            opacity: 1; /* Keep opacity at 1 on hover for red */
+        }
+
+        /* Three dots menu */
+        .post-options {
+            position: relative;
+            cursor: pointer;
+            font-size: 20px;
+            color: #f5f5f5;
+            padding: 5px;
+        }
+
+        .post-options-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: #363636;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            min-width: 120px;
+            display: none; /* Hidden by default */
+            overflow: hidden; /* For rounded corners */
+        }
+
+        .post-options-menu.active {
+            display: block;
+        }
+
+        .post-options-menu button {
+            background: none;
+            border: none;
+            color: #f5f5f5;
+            padding: 10px 15px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+        .post-options-menu button:hover {
+            background-color: #4a4a4a;
+        }
+
+        .post-options-menu button.delete {
+            color: #ed4956; /* Red color for delete */
+        }
+
+
+        .post-image img {
+            width: 100%;
+            max-height: 700px;
+            object-fit: contain;
+            display: block;
+            background-color: #000;
+        }
+
+        .post-actions {
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .post-actions .action-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            cursor: pointer;
+            color: #f5f5f5;
+        }
+
+        .post-actions .action-icon:hover {
+            opacity: 0.7;
+        }
+
+        .post-actions .action-icon.liked {
+            color: #ed4956;
+        }
+
+        .post-likes {
+            padding: 0 15px;
+            font-weight: bold;
+            font-size: 14px;
+            color: #f5f5f5;
+            margin-bottom: 5px;
+        }
+
+        .post-caption {
+            padding: 0 15px 15px;
+            font-size: 14px;
+            color: #f5f5f5;
+        }
+
+        .post-caption .username {
+            font-weight: bold;
+            margin-right: 5px;
+            color: #f5f5f5;
+        }
+
+        .no-posts-message {
+            text-align: center;
+            padding: 50px 20px;
+            font-size: 18px;
+            color: #b3b3b3;
+        }
+
+        /* Footer Navigation */
+        .footer {
+            background-color: #1a1a1a;
+            border-top: 1px solid #262626;
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: sticky;
+            bottom: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .footer .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #f5f5f5;
+            font-size: 22px;
+            transition: color 0.2s ease;
+            flex-basis: 20%;
+            text-align: center;
+        }
+
+        .footer .nav-item i {
+            margin-bottom: 3px;
+        }
+
+        /* Profile picture in footer */
+        .footer .profile-circle {
+            width: 28px; /* Slightly smaller than 32px for post header */
+            height: 28px;
+            border-radius: 50%;
+            background-color: #b3b3b3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px; /* For first letter */
+            font-weight: bold;
+            color: #fff;
+            overflow: hidden;
+            margin-bottom: 3px;
+            border: 2px solid transparent; /* Default border */
+        }
+
+        .footer .profile-circle.has-image {
+            border-color: #f5f5f5; /* White border for active user profile image */
+        }
+
+        .footer .profile-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+
+        .footer .nav-item.active {
+            color: #0095f6;
+        }
+
+        .footer .nav-item:hover {
+            color: #8e8e8e;
+        }
+
+        /* Active profile circle border for active state */
+        .footer .nav-item.active .profile-circle {
+            border-color: #0095f6; /* Blue border when active */
+        }
+
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+            .header .logo {
+                font-size: 24px;
+            }
+            .main-content {
+                padding: 20px 15px;
+            }
+            .feed-container {
+                padding: 0;
+            }
+            .footer .nav-item {
+                font-size: 20px;
+            }
+            .footer .profile-circle {
+                width: 26px;
+                height: 26px;
+                font-size: 15px;
+            }
+            .post-image img {
+                max-height: 500px;
+            }
+            .verified-badge {
+                width: 14px;
+                height: 14px;
+            }
+            .post-header .username {
+                font-size: 14px; /* Adjust username font size */
+            }
+            .follow-button {
+                font-size: 13px;
+                padding: 4px 8px;
+            }
+            .post-actions .action-icon {
+                font-size: 22px;
+                margin-right: 12px;
+            }
+            .post-likes, .post-caption {
+                font-size: 13px;
+            }
+            .header-actions .header-icon {
+                font-size: 22px;
+            }
+            .story-circle {
+                width: 60px;
+                height: 60px;
+            }
+            .story-avatar {
+                width: 54px;
+                height: 54px;
+                font-size: 20px;
+            }
+             .add-story-plus-icon {
+                font-size: 14px;
+                width: 18px;
+                height: 18px;
+                bottom: 12px; /* Adjusted for smaller screens */
+            }
+            .story-username {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header .logo {
+                font-size: 22px;
+            }
+            .main-content {
+                padding: 10px;
+            }
+            .footer .nav-item {
+                font-size: 18px;
+            }
+            .footer .profile-circle {
+                width: 24px;
+                height: 24px;
+                font-size: 14px;
+            }
+            .post-image img {
+                max-height: 400px;
+            }
+            .verified-badge {
+                width: 12px;
+                height: 12px;
+            }
+            .post-header .username {
+                font-size: 13px;
+            }
+            .follow-button {
+                font-size: 12px;
+                padding: 3px 6px;
+            }
+            .post-actions .action-icon {
+                font-size: 20px;
+                margin-right: 10px;
+            }
+            .post-likes, .post-caption {
+                font-size: 12px;
+            }
+            .header-actions .header-icon {
+                font-size: 20px;
+            }
+            .story-circle {
+                width: 50px;
+                height: 50px;
+            }
+            .story-avatar {
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
+            }
+             .add-story-plus-icon {
+                font-size: 12px;
+                width: 16px;
+                height: 16px;
+                bottom: 10px; /* Adjusted for smaller screens */
+            }
+            .stories-container {
+                padding: 10px 8px;
+            }
+            .story-username {
+                font-size: 10px;
+            }
+        }
+
+        /* Story Modal Styles */
+        /* These styles are no longer directly used for showing stories, but kept if you plan to reuse for other modals */
+        .story-modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 2000; /* High z-index to be on top */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); /* Dark overlay */
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .story-modal-content {
+            background-color: #000;
+            position: relative;
+            /* Max width for portrait mode aspect ratio, e.g., 9:16 or 3:4 */
+            max-width: 90%; /* Max width relative to viewport */
+            max-height: 90%; /* Max height relative to viewport */
+            width: auto; /* Allow width to adjust based on aspect ratio of image */
+            height: auto; /* Allow height to adjust based on aspect ratio of image */
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Add a subtle shadow */
+        }
+
+        .story-modal-content img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Ensures the whole image is visible, maintaining aspect ratio */
+            display: block;
+        }
+
+        .story-modal-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px; /* Increased padding for better spacing */
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); /* Fading background */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            box-sizing: border-box;
+            color: #fff;
+            z-index: 10;
+        }
+
+        .story-modal-header .avatar {
+            width: 36px; /* Slightly larger avatar for better visibility */
+            height: 36px;
+            border-radius: 50%;
+            background-color: #b3b3b3;
+            margin-right: 10px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px; /* Adjusted font size for larger avatar */
+            font-weight: bold;
+            border: 2px solid #fff; /* White border for emphasis */
+        }
+
+        .story-modal-header .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .story-modal-header .username {
+            font-weight: bold;
+            font-size: 15px; /* Adjusted font size */
+            color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            flex-grow: 1; /* Allow username to take available space */
+        }
+
+        .story-modal-header .username .verified-badge {
+            width: 14px; /* Smaller badge for header */
+            height: 14px;
+            margin-left: 4px;
+            flex-shrink: 0;
+        }
+
+        /* Adjusted position for the close button, now it's absolute within .story-modal */
+        .story-modal-close {
+            color: #fff;
+            font-size: 30px; /* Larger close icon */
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 20px; /* Aligned to the top right of the modal */
+            z-index: 11;
+            background-color: rgba(0,0,0,0.3); /* Slight background for clickability */
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+
+        .story-modal-close:hover {
+            background-color: rgba(0,0,0,0.5);
+            opacity: 0.9;
+        }
+
+        /* Story Options (Three Dots) */
+        .story-options {
+            position: absolute;
+            top: 10px;
+            right: 70px; /* Positioned to the left of the close button */
+            z-index: 11;
+            cursor: pointer;
+            font-size: 24px;
+            color: #fff;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+
+        .story-options:hover {
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .story-options-menu {
+            position: absolute;
+            top: 40px; /* Below the three dots icon */
+            right: 0; /* Aligned with the right edge of the three dots icon's parent */
+            background-color: #363636;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            z-index: 12; /* Higher than options icon */
+            min-width: 100px;
+            display: none; /* Hidden by default */
+            overflow: hidden;
+        }
+
+        .story-options-menu.active {
+            display: block;
+        }
+
+        .story-options-menu button {
+            background: none;
+            border: none;
+            color: #f5f5f5;
+            padding: 8px 12px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+        .story-options-menu button:hover {
+            background-color: #4a4a4a;
+        }
+
+        .story-options-menu button.delete {
+            color: #ed4956;
+            font-weight: bold;
+        }
+
+        /* New Styles for Story Viewers */
+        .story-viewer-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 15px;
+            background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); /* Fading background */
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Center horizontally */
+            color: #fff;
+            font-size: 14px;
+            z-index: 10;
+            cursor: pointer;
+            box-sizing: border-box;
+            transition: background-color 0.2s ease;
+        }
+
+        .story-viewer-info:hover {
+            background-color: rgba(0,0,0,0.8);
+        }
+
+        .story-viewer-info i {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        /* Story Viewers Modal */
+        .viewers-modal {
+            display: none;
+            position: fixed;
+            z-index: 3000; /* Higher than story modal */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .viewers-modal-content {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80%;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .viewers-modal-content h3 {
+            margin-top: 0;
+            color: #f5f5f5;
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #262626;
+            padding-bottom: 10px;
+        }
+
+        .viewers-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .viewer-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #262626;
+        }
+
+        .viewer-item:last-child {
+            border-bottom: none;
+        }
+
+        .viewer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #b3b3b3;
+            margin-right: 15px;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .viewer-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .viewer-username {
+            font-weight: bold;
+            color: #f5f5f5;
+            flex-grow: 1;
+        }
+
+        .viewer-timestamp {
+            font-size: 12px;
+            color: #8e8e8e;
+            margin-left: auto; /* Push to the right */
+            white-space: nowrap;
+        }
+
+        .viewers-modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: #f5f5f5;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Styles for collaborative post avatars */
+        .collaborative-avatars {
+            display: flex;
+            position: relative; /* For overlapping */
+            margin-right: 10px;
+        }
+
+        .collaborative-avatars .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #b3b3b3;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            border: 2px solid #262626; /* Border to create separation */
+            position: relative; /* For z-index to work on overlap */
+        }
+
+        .collaborative-avatars .avatar:not(:first-child) {
+            margin-left: -15px; /* Overlap effect */
+        }
+        .collaborative-avatars .avatar:nth-child(2) {
+            z-index: 1; /* Ensure the second avatar is above the first */
+        }
+        .collaborative-avatars .avatar:nth-child(3) {
+            z-index: 2; /* Ensure the third avatar is above the second */
+        }
+        /* Add more if you expect more than 3 collaborators to show overlap visually */
+
+        .collaborative-avatars .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* NEW CSS for the "collaborated with" / "and" text */
+        .post-header .username .collaborated-tag {
+            margin: 0 4px; /* Small horizontal margin to separate from usernames */
+            font-size: 13px; /* Keep font size similar */
+            color: #8e8e8e; /* Lighter color */
+            font-weight: normal; /* Ensure it's not bold */
+            white-space: nowrap;
+            flex-shrink: 0;
+            /* You might want to adjust line-height or vertical-align if it doesn't align well with usernames */
+            /* vertical-align: middle; */
+        }
+
+        @media (max-width: 768px) {
+            .post-header .username .collaborated-tag {
+                margin: 0 3px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .post-header .username .collaborated-tag {
+                margin: 0 2px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="home.html" class="logo">Bluenote</a>
+        <div class="header-actions">
+            <i class="far fa-paper-plane header-icon" id="dmIcon" title="Direct Messages"></i>
+        </div>
+    </div>
+
+    <div class="stories-container" id="storiesContainer">
+        </div>
+
+    <div class="main-content">
+        <div class="feed-container" id="postsContainer">
+            <p class="no-posts-message" id="loadingMessage">Loading posts...</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <a href="home.html" class="nav-item active" id="homeLink">
+            <i class="fas fa-home"></i>
+        </a>
+        <a href="search.html" class="nav-item" id="searchLink">
+            <i class="fas fa-search"></i>
+        </a>
+        <a href="create.html" class="nav-item" id="createPostLink">
+            <i class="fas fa-plus-square"></i>
+        </a>
+        <a href="notifications.html" class="nav-item" id="notificationsLink">
+            <i class="fas fa-heart"></i>
+        </a>
+        <a href="profile.html" class="nav-item" id="profileLink">
+            <div class="profile-circle" id="footerProfileCircle">
+            </div>
+        </a>
+    </div>
+
+    <div id="storyModal" class="story-modal" style="display: none;">
+        <div class="story-modal-content">
+            <div class="story-modal-header">
+                <div class="avatar" id="modalStoryAvatar"></div>
+                <span class="username" id="modalStoryUsername"></span>
+            </div>
+            <img src="" alt="Story Image" id="modalStoryImage">
+            <div class="story-viewer-info" id="storyViewerInfo" style="display: none;">
+                <i class="far fa-eye"></i>
+                <span id="storyViewerCount">0 views</span>
+            </div>
+        </div>
+        <span class="story-modal-close">&times;</span>
+        <div class="story-options" id="storyOptionsIcon" style="display: none;">
+            <i class="fas fa-ellipsis-h"></i>
+            <div class="story-options-menu" id="storyOptionsMenu">
+                <button class="delete-story-btn delete">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="viewersModal" class="viewers-modal" style="display: none;">
+        <div class="viewers-modal-content">
+            <span class="viewers-modal-close">&times;</span>
+            <h3>Viewers</h3>
+            <ul class="viewers-list" id="viewersList">
+                </ul>
+            <p class="no-viewers-message" style="display:none; text-align:center; color:#8e8e8e;">No one has viewed this story yet.</p>
+        </div>
+    </div>
+
+
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-storage-compat.js"></script>
+
+    <script>
+        // Your Firebase project configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdu3d0_qEDZaXkBkJAO0VY0htme6_EMyM",
+            authDomain: "bluegram-27a79.firebaseapp.com",
+            databaseURL: "https://bluegram-27a79-default-rtdb.firebaseio.com",
+            projectId: "bluegram-27a79",
+            storageBucket: "bluegram-27a79.firebasestorage.app",
+            messagingSenderId: "780485443121",
+            appId: "1:780485443121:web:f7469d2264293fcbdf5f10",
+            measurementId: "G-YF5S9HK2Q5"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        const postsContainer = document.getElementById('postsContainer');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const footerProfileCircle = document.getElementById('footerProfileCircle');
+        const dmIcon = document.getElementById('dmIcon'); // Get the DM icon
+        const storiesContainer = document.getElementById('storiesContainer'); // Get stories container
+
+        // Removed storyModal related elements as they are no longer needed in home.html
+        // const storyModal = document.getElementById('storyModal');
+        // const modalStoryImage = document.getElementById('modalStoryImage');
+        // const modalStoryUsername = document.getElementById('modalStoryUsername');
+        // const modalStoryAvatar = document.getElementById('modalStoryAvatar');
+        // const storyModalClose = document.querySelector('.story-modal-close');
+        // const storyOptionsIcon = document.getElementById('storyOptionsIcon');
+        // const storyOptionsMenu = document.getElementById('storyOptionsMenu');
+        // const deleteStoryBtn = storyOptionsMenu.querySelector('.delete-story-btn');
+
+        // Keeping these for potential future use or if you adapt the viewer modal for other purposes
+        const storyViewerInfo = document.getElementById('storyViewerInfo');
+        const storyViewerCount = document.getElementById('storyViewerCount');
+        const viewersModal = document.getElementById('viewersModal');
+        const viewersModalClose = document.querySelector('#viewersModal .viewers-modal-close');
+        const viewersList = document.getElementById('viewersList');
+        const noViewersMessage = document.querySelector('#viewersModal .no-viewers-message');
+
+
+        const IMG_BB_API_KEY = "7184e56bb0953c0545409c441c402a66"; // Your ImgBB API Key
+
+        let currentUserId = null;
+        let currentUserData = null; // To store current user's data like username/avatar
+        let currentStoryId = null; // To store the ID of the currently viewed story for deletion
+
+        // SVG for the verified badge
+        const verifiedSVG = `<svg class="verified-badge" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 256 256" xml:space="preserve">
+            <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                <polygon points="45,6.18 57.06,0 64.41,11.38 77.94,12.06 78.62,25.59 90,32.94 83.82,45 90,57.06 78.62,64.41 77.94,77.94 64.41,78.62 57.06,90 45,83.82 32.94,90 25.59,78.62 12.06,77.94 11.38,64.41 0,57.06 6.18,45 0,32.94 11.38,25.59 12.06,12.06 25.59,11.38 12.06,12.06 25.59,11.38 32.94,0 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; fill: rgb(0,150,241); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+                <polygon points="40.16,58.47 26.24,45.08 29.7,41.48 40.15,51.52 61.22,31.08 64.7,34.67 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+            </g>
+        </svg>`;
+
+        // Helper to add notifications
+        async function addNotification(type, targetUserId, postId = null, commentText = null) {
+            if (!currentUserId || !currentUserData) {
+                console.warn('Cannot add notification: current user not logged in or data not fetched.');
+                return;
+            }
+            if (currentUserId === targetUserId && type !== 'follow') { // Allow follow notification for self if needed, but not likes/comments
+                console.log('Skipping self-notification for likes/comments.');
+                return;
+            }
+
+            try {
+                await db.collection('notifications').add({
+                    type: type, // 'like', 'comment', 'follow'
+                    targetUserId: targetUserId, // User who receives notification
+                    actorUserId: currentUserId, // User who performed action
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    read: false,
+                    postId: postId,
+                    commentText: commentText, // Only for comments
+                    actorUsername: currentUserData.username // Add actor's username for display
+                });
+                console.log(`Notification added: ${type} for ${targetUserId}`);
+            } catch (error) {
+                console.error("Error adding notification:", error);
+            }
+        }
+
+        // Function to update the footer profile picture
+        function updateFooterProfilePicture(profilePictureUrl, username) {
+            footerProfileCircle.innerHTML = ''; // Clear previous content
+            footerProfileCircle.classList.remove('has-image'); // Remove class initially
+
+            if (profilePictureUrl) {
+                const img = document.createElement('img');
+                img.src = profilePictureUrl;
+                img.alt = 'Profile Picture';
+                footerProfileCircle.appendChild(img);
+                footerProfileCircle.classList.add('has-image');
+            } else {
+                // Fallback to first letter of username or a default 'P'
+                const firstLetter = (username && username.length > 0) ? username.charAt(0).toUpperCase() : 'P';
+                footerProfileCircle.textContent = firstLetter;
+            }
+        }
+
+        // Check if user is logged in, redirect to login if not
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                console.log('No user logged in, redirecting to login.html');
+                window.location.href = 'login.html';
+            } else {
+                console.log('User is logged in:', user.email);
+                currentUserId = user.uid;
+                // Fetch current user's data once logged in
+                const userDoc = await db.collection('users').doc(currentUserId).get();
+                if (userDoc.exists) {
+                    currentUserData = userDoc.data();
+                } else {
+                    // Create a basic user doc if it doesn't exist (e.g., first login)
+                    currentUserData = {
+                        username: user.email.split('@')[0],
+                        isVerified: false,
+                        profilePictureUrl: '',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        postsCount: 0,
+                        followersCount: 0,
+                        followingCount: 0, // Initialize followingCount
+                        following: [] // Ensure 'following' array exists
+                    };
+                    await db.collection('users').doc(currentUserId).set(currentUserData);
+                }
+                updateFooterProfilePicture(currentUserData.profilePictureUrl, currentUserData.username);
+                // Start listening for posts and stories
+                listenForStories();
+                listenForPosts();
+            }
+        });
+
+        // Function to handle post deletion (used for main feed posts)
+        async function deletePost(postId, imageUrl, postUserId) {
+            if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                // 1. Delete post document from Firestore
+                await db.collection('posts').doc(postId).delete();
+                console.log('Post document deleted from Firestore:', postId);
+
+                // 2. Delete image from Firebase Storage (if URL is a Firebase Storage URL)
+                if (imageUrl && imageUrl.includes('firebasestorage.googleapis.com')) {
+                    try {
+                        const imageRef = storage.refFromURL(imageUrl);
+                        await imageRef.delete();
+                        console.log('Post image deleted from Firebase Storage:', imageUrl);
+                    } catch (storageError) {
+                        console.warn('Could not delete image from Firebase Storage (might be from ImgBB or already deleted):', storageError);
+                    }
+                } else if (imageUrl) {
+                    console.log('Image is likely from ImgBB, not deleting from Firebase Storage:', imageUrl);
+                }
+
+                // 3. Decrement postsCount in the user's document if it's their post
+                if (postUserId) {
+                    const userDocRef = db.collection('users').doc(postUserId);
+                    await userDocRef.update({
+                        postsCount: firebase.firestore.FieldValue.increment(-1)
+                    });
+                    console.log('User postsCount decremented.');
+                }
+
+                // UI update: The real-time listener will handle removing the post from the UI automatically.
+                alert('Post deleted successfully!');
+            } catch (error) {
+                console.error("Error deleting post:", error);
+                alert('Failed to delete post. Please try again.');
+            }
+        }
+
+        // --- Client-side shuffling function ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+            }
+        }
+
+        // --- Story Functions ---
+
+        async function uploadImageToImgBB(file) {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_BB_API_KEY}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.data && data.data.url) {
+                    return data.data.url;
+                } else {
+                    throw new Error('ImgBB upload failed: ' + (data.error ? data.error.message : 'Unknown error'));
+                }
+            } catch (error) {
+                console.error("Error uploading to ImgBB:", error);
+                alert('Failed to upload image for story. Please try again.');
+                return null;
+            }
+        }
+
+        async function addStory(imageUrl) {
+            if (!currentUserId || !currentUserData) {
+                console.error('Cannot add story: user not logged in.');
+                alert('You must be logged in to add a story.');
+                return;
+            }
+
+            try {
+                await db.collection('stories').add({
+                    userId: currentUserId,
+                    username: currentUserData.username,
+                    profilePictureUrl: currentUserData.profilePictureUrl || '',
+                    imageUrl: imageUrl,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('Story added successfully!');
+            } catch (error) {
+                console.error("Error adding story to Firestore:", error);
+                alert('Failed to add story. Please try again.');
+            }
+        }
+
+        // The deleteStory, markStoryAsSeen, fetchStoryViewers are not directly used in home.html anymore
+        // as the story modal is removed. These functions would be moved to stories.html.
+        /*
+        async function deleteStory(storyId, imageUrl) {
+            if (!confirm('Are you sure you want to delete this story?')) {
+                return;
+            }
+
+            try {
+                // Delete story document from Firestore
+                await db.collection('stories').doc(storyId).delete();
+                console.log('Story document deleted from Firestore:', storyId);
+
+                // Optionally, delete image from storage if it's a Firebase Storage URL (ImgBB URLs don't need this)
+                if (imageUrl && imageUrl.includes('firebasestorage.googleapis.com')) {
+                    try {
+                        const imageRef = storage.refFromURL(imageUrl);
+                        await imageRef.delete();
+                        console.log('Story image deleted from Firebase Storage:', imageUrl);
+                    } catch (storageError) {
+                        console.warn('Could not delete story image from Firebase Storage (might be from ImgBB or already deleted):', storageError);
+                    }
+                } else if (imageUrl) {
+                    console.log('Story image is likely from ImgBB, not deleting from Firebase Storage:', imageUrl);
+                }
+
+                storyModal.style.display = 'none'; // Close the modal
+                alert('Story deleted successfully!');
+                // The listenForStories() will automatically update the UI.
+            } catch (error) {
+                console.error("Error deleting story:", error);
+                alert('Failed to delete story. Please try again.');
+            }
+        }
+
+        // Function to mark a story as seen by the current user
+        async function markStoryAsSeen(storyId) {
+            if (!currentUserId) return;
+
+            try {
+                // Use a subcollection for seen status for better scalability
+                const seenRef = db.collection('stories').doc(storyId).collection('seenBy').doc(currentUserId);
+                await seenRef.set({
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log(`Story ${storyId} marked as seen by ${currentUserId}`);
+            } catch (error) {
+                console.error("Error marking story as seen:", error);
+            }
+        }
+
+        // NEW: Function to fetch story viewers
+        async function fetchStoryViewers(storyId) {
+            viewersList.innerHTML = ''; // Clear previous list
+            noViewersMessage.style.display = 'none'; // Hide no viewers message
+
+            try {
+                const seenBySnapshot = await db.collection('stories').doc(storyId).collection('seenBy').get();
+                if (seenBySnapshot.empty) {
+                    noViewersMessage.style.display = 'block';
+                    return;
+                }
+
+                const viewerIds = seenBySnapshot.docs.map(doc => doc.id);
+                const viewerPromises = viewerIds.map(id => db.collection('users').doc(id).get());
+                const viewerDocs = await Promise.all(viewerPromises);
+
+                let hasViewers = false;
+                viewerDocs.forEach(userDoc => {
+                    if (userDoc.exists) {
+                        hasViewers = true;
+                        const viewerData = userDoc.data();
+                        const viewerUserId = userDoc.id;
+                        let viewerUsername = viewerData.username || 'Unknown User';
+                        let viewerProfilePictureUrl = viewerData.profilePictureUrl || '';
+                        const seenTimestamp = seenBySnapshot.docs.find(doc => doc.id === viewerUserId)?.data().timestamp;
+
+                        let viewerAvatarHtml = '';
+                        if (viewerProfilePictureUrl) {
+                            viewerAvatarHtml = `<img src="${viewerProfilePictureUrl}" alt="${viewerUsername}">`;
+                        } else {
+                            const firstLetter = (viewerUsername && viewerUsername.length > 0) ? viewerUsername.charAt(0).toUpperCase() : 'U';
+                            viewerAvatarHtml = `<span>${firstLetter}</span>`;
+                        }
+
+                        const listItem = document.createElement('li');
+                        listItem.classList.add('viewer-item');
+                        listItem.innerHTML = `
+                            <div class="viewer-avatar">${viewerAvatarHtml}</div>
+                            <span class="viewer-username">${viewerUsername}</span>
+                            ${seenTimestamp ? `<span class="viewer-timestamp">${formatTimeAgo(new Date(seenTimestamp.toDate()))}</span>` : ''}
+                        `;
+                        viewersList.appendChild(listItem);
+                    }
+                });
+
+                if (!hasViewers) {
+                    noViewersMessage.style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error("Error fetching story viewers:", error);
+                noViewersMessage.style.display = 'block';
+                noViewersMessage.textContent = 'Error loading viewers.';
+            }
+        }
+        */
+
+
+        function listenForStories() {
+            storiesContainer.innerHTML = ''; // Clear existing stories
+
+            const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
+            db.collection('stories')
+                .where('timestamp', '>', twentyFourHoursAgo)
+                .orderBy('timestamp', 'asc')
+                .onSnapshot(async (snapshot) => {
+                    storiesContainer.innerHTML = ''; // Clear everything to rebuild
+
+                    const usersSnapshot = await db.collection('users').get();
+                    const usersData = {};
+                    usersSnapshot.forEach(userDoc => {
+                        usersData[userDoc.id] = userDoc.data();
+                        usersData[userDoc.id].userId = userDoc.id; // Add userId to the data object for easier access
+                    });
+
+                    let currentUserActiveStory = null;
+                    let allStories = [];
+
+                    // Fetch seen status for all relevant stories
+                    const seenStories = new Set(); // Stores storyIds that current user has seen
+                    if (currentUserId) {
+                        // Correctly query seenBy subcollections for the current user
+                        const storyDocs = snapshot.docs;
+                        const seenByPromises = storyDocs.map(async (storyDoc) => {
+                            const seenByRef = storyDoc.ref.collection('seenBy').doc(currentUserId);
+                            const seenByDoc = await seenByRef.get();
+                            if (seenByDoc.exists) {
+                                seenStories.add(storyDoc.id);
+                            }
+                        });
+                        await Promise.all(seenByPromises);
+                    }
+
+
+                    snapshot.forEach(doc => {
+                        const story = { id: doc.id, ...doc.data() };
+                        story.isSeen = seenStories.has(story.id); // Add seen status to story object
+                        allStories.push(story);
+                    });
+
+                    // Separate and sort stories
+                    const yourStories = [];
+                    const unseenStories = [];
+                    const seenOthersStories = [];
+
+                    allStories.forEach(story => {
+                        if (story.userId === currentUserId) {
+                            yourStories.push(story);
+                            // Find the *last* story that is your own to be considered "active"
+                            if (!currentUserActiveStory || story.timestamp.toDate() > currentUserActiveStory.timestamp.toDate()) {
+                                currentUserActiveStory = story;
+                            }
+                        } else if (story.isSeen) {
+                            seenOthersStories.push(story);
+                        } else {
+                            unseenStories.push(story);
+                        }
+                    });
+
+                    // Sort unseen stories by timestamp (newest first for better discovery, or oldest first for consistent order)
+                    unseenStories.sort((a, b) => a.timestamp.toDate() - b.timestamp.toDate());
+                    // Sort seen stories by timestamp if desired, or keep as is.
+                    seenOthersStories.sort((a, b) => a.timestamp.toDate() - b.timestamp.toDate());
+
+
+                    // --- Render "Your Story" circle first ---
+                    const addStoryItem = document.createElement('div');
+                    addStoryItem.classList.add('story-item', 'your-story');
+
+                    let myStoryAvatarHtml = '';
+                    if (currentUserData && currentUserData.profilePictureUrl) {
+                        myStoryAvatarHtml = `<img src="${currentUserData.profilePictureUrl}" alt="My Story">`;
+                    } else {
+                        myStoryAvatarHtml = `<span>${currentUserData.username ? currentUserData.username.charAt(0).toUpperCase() : 'P'}</span>`;
+                    }
+
+                    // Apply gradient border if currentUserActiveStory exists, else default grey
+                    const storyCircleClass = (currentUserActiveStory && !currentUserActiveStory.isSeen) ? 'story-circle' : 'story-circle seen';
+
+                    addStoryItem.innerHTML = `
+                        <div class="${storyCircleClass}" id="myStoryCircle">
+                            <div class="story-avatar">${myStoryAvatarHtml}</div>
+                        </div>
+                        <i class="fas fa-plus add-story-plus-icon" id="addStoryPlusIcon"></i>
+                        <span class="story-username">Add Story</span> `;
+                    storiesContainer.appendChild(addStoryItem);
+
+                    const myStoryCircle = addStoryItem.querySelector('#myStoryCircle');
+                    const addStoryPlusIcon = addStoryItem.querySelector('#addStoryPlusIcon');
+
+                    // Event Listener for the PLUS ICON
+                    addStoryPlusIcon.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent the click from bubbling to the parent story-circle
+                        const fileInput = document.createElement('input');
+                        fileInput.type = 'file';
+                        fileInput.accept = 'image/*';
+                        fileInput.onchange = async (event) => {
+                            const file = event.target.files[0];
+                            if (file) {
+                                alert('Uploading new story...');
+                                const imageUrl = await uploadImageToImgBB(file);
+                                if (imageUrl) {
+                                    await addStory(imageUrl);
+                                    alert('New story uploaded!');
+                                }
+                            }
+                        };
+                        fileInput.click();
+                    });
+
+                    // Event Listener for the STORY CIRCLE (profile picture area)
+                    myStoryCircle.addEventListener('click', () => {
+                        if (currentUserActiveStory) {
+                            // If user has an active story, clicking the profile picture plays it
+                            // Redirect to stories.html with parameters
+                            const params = new URLSearchParams({
+                                imageUrl: currentUserActiveStory.imageUrl,
+                                username: encodeURIComponent(currentUserData.username),
+                                profilePictureUrl: encodeURIComponent(currentUserData.profilePictureUrl || ''),
+                                isVerified: currentUserData.isVerified || false,
+                                storyId: currentUserActiveStory.id,
+                                isYourStory: true
+                            }).toString();
+                            window.location.href = `stories.html?${params}`;
+                        } else {
+                            // If no active story, clicking the profile picture also prompts to add one (same as plus icon)
+                            const fileInput = document.createElement('input');
+                            fileInput.type = 'file';
+                            fileInput.accept = 'image/*';
+                            fileInput.onchange = async (event) => {
+                                const file = event.target.files[0];
+                                if (file) {
+                                    alert('Uploading story...');
+                                    const imageUrl = await uploadImageToImgBB(file);
+                                    if (imageUrl) {
+                                        await addStory(imageUrl);
+                                        alert('Story uploaded!');
+                                    }
+                                }
+                            };
+                            fileInput.click();
+                        }
+                    });
+
+
+                    // --- Render other users' unseen stories first ---
+                    unseenStories.forEach(story => {
+                        const storyUserId = story.userId;
+                        let storyUsername = usersData[storyUserId] ? (usersData[storyUserId].username || 'Unknown User') : 'Unknown User';
+                        let storyProfilePictureUrl = usersData[storyUserId] ? usersData[storyUserId].profilePictureUrl : null;
+                        let isVerifiedStoryUser = usersData[storyUserId] ? (usersData[storyUserId].isVerified || false) : false;
+
+                        let storyAvatarHtml = '';
+                        if (storyProfilePictureUrl) {
+                            storyAvatarHtml = `<img src="${storyProfilePictureUrl}" alt="${storyUsername}">`;
+                        } else {
+                            const firstLetter = (storyUsername && storyUsername.length > 0) ? storyUsername.charAt(0).toUpperCase() : 'U';
+                            storyAvatarHtml = `<span>${firstLetter}</span>`;
+                        }
+
+                        const storyItem = document.createElement('div');
+                        storyItem.classList.add('story-item');
+                        const storyCircleElem = document.createElement('div');
+                        storyCircleElem.classList.add('story-circle'); // Default to gradient
+                        storyCircleElem.innerHTML = `<div class="story-avatar">${storyAvatarHtml}</div>`;
+
+                        storyItem.appendChild(storyCircleElem);
+                        storyItem.innerHTML += `<span class="story-username">${storyUsername}</span>`;
+                        storiesContainer.appendChild(storyItem);
+
+                        storyItem.addEventListener('click', () => {
+                            const params = new URLSearchParams({
+                                imageUrl: story.imageUrl,
+                                username: encodeURIComponent(storyUsername),
+                                profilePictureUrl: encodeURIComponent(storyProfilePictureUrl || ''),
+                                isVerified: isVerifiedStoryUser,
+                                storyId: story.id,
+                                isYourStory: false // Not your story
+                            }).toString();
+                            window.location.href = `stories.html?${params}`;
+                        });
+                    });
+
+                    // --- Render other users' seen stories last ---
+                    seenOthersStories.forEach(story => {
+                        const storyUserId = story.userId;
+                        let storyUsername = usersData[storyUserId] ? (usersData[storyUserId].username || 'Unknown User') : 'Unknown User';
+                        let storyProfilePictureUrl = usersData[storyUserId] ? usersData[storyUserId].profilePictureUrl : null;
+                        let isVerifiedStoryUser = usersData[storyUserId] ? (usersData[storyUserId].isVerified || false) : false;
+
+                        let storyAvatarHtml = '';
+                        if (storyProfilePictureUrl) {
+                            storyAvatarHtml = `<img src="${storyProfilePictureUrl}" alt="${storyUsername}">`;
+                        } else {
+                            const firstLetter = (storyUsername && storyUsername.length > 0) ? storyUsername.charAt(0).toUpperCase() : 'U';
+                            storyAvatarHtml = `<span>${firstLetter}</span>`;
+                        }
+
+                        const storyItem = document.createElement('div');
+                        storyItem.classList.add('story-item');
+                        const storyCircleElem = document.createElement('div');
+                        storyCircleElem.classList.add('story-circle', 'seen'); // Already seen, so add 'seen' class
+                        storyCircleElem.innerHTML = `<div class="story-avatar">${storyAvatarHtml}</div>`;
+
+                        storyItem.appendChild(storyCircleElem);
+                        storyItem.innerHTML += `<span class="story-username">${storyUsername}</span>`;
+                        storiesContainer.appendChild(storyItem);
+
+                        storyItem.addEventListener('click', () => {
+                            const params = new URLSearchParams({
+                                imageUrl: story.imageUrl,
+                                username: encodeURIComponent(storyUsername),
+                                profilePictureUrl: encodeURIComponent(storyProfilePictureUrl || ''),
+                                isVerified: isVerifiedStoryUser,
+                                storyId: story.id,
+                                isYourStory: false // Not your story
+                            }).toString();
+                            window.location.href = `stories.html?${params}`;
+                        });
+                    });
+
+                }, (error) => {
+                    console.error("Error fetching stories:", error);
+                });
+        }
+
+        // Function to fetch and display posts (using real-time listener with shuffling)
+        function listenForPosts() {
+            loadingMessage.textContent = 'Loading posts...';
+            loadingMessage.style.display = 'block';
+
+            // Set up a real-time listener for the 'posts' collection
+            // Fetch a larger number of recent posts to shuffle client-side
+            db.collection('posts')
+                .orderBy('timestamp', 'desc') // Order by newest first
+                .limit(50) // Fetch, for example, the last 50 posts
+                .onSnapshot(async (snapshot) => {
+                    postsContainer.innerHTML = ''; // Clear previous content on every update
+
+                    if (snapshot.empty) {
+                        postsContainer.innerHTML = '<p class="no-posts-message">No posts yet. Be the first to create one!</p>';
+                        loadingMessage.style.display = 'none';
+                        return;
+                    }
+
+                    // Fetch all user data once to determine usernames, verification status, and avatars for all posts
+                    const usersSnapshot = await db.collection('users').get();
+                    const usersData = {};
+                    usersSnapshot.forEach(userDoc => {
+                        usersData[userDoc.id] = userDoc.data();
+                        usersData[userDoc.id].userId = userDoc.id; // Store user ID in the data object
+                    });
+
+                    let postsToDisplay = [];
+                    snapshot.forEach(doc => {
+                        postsToDisplay.push({ id: doc.id, data: doc.data() });
+                    });
+
+                    // Shuffle the fetched posts array
+                    shuffleArray(postsToDisplay);
+
+                    postsToDisplay.forEach(postDoc => {
+                        const post = postDoc.data;
+                        const postId = postDoc.id;
+                        const postUserId = post.userId; // This is the primary creator of the post
+
+                        const collaborators = post.collaborators || [];
+                        // Check if the primary post owner is also in collaborators to avoid duplication
+                        const uniqueCollaborators = Array.from(new Set([postUserId, ...collaborators]));
+                        // If there's only one unique user, it's not a collaborative post visually
+                        const isCollaborative = uniqueCollaborators.length > 1;
+
+                        let headerAvatarHtml = '';
+                        let headerUsernameHtml = '';
+
+                        if (isCollaborative) {
+                            // For collaborative posts, gather all user IDs (creator + collaborators)
+                            const involvedUsersData = uniqueCollaborators
+                                .map(uid => usersData[uid])
+                                .filter(data => data); // Filter out any undefined data
+
+                            // Sort collaborators for consistent display (e.g., alphabetically by username)
+                            involvedUsersData.sort((a, b) => (a.username || '').localeCompare(b.username || ''));
+
+                            // Construct avatars for collaborative post
+                            involvedUsersData.slice(0, 3).forEach((userData) => { // Display up to 3 avatars for overlap
+                                const avatarContent = userData.profilePictureUrl
+                                    ? `<img src="${userData.profilePictureUrl}" alt="${userData.username}">`
+                                    : `<span>${userData.username ? userData.username.charAt(0).toUpperCase() : 'P'}</span>`;
+                                headerAvatarHtml += `<div class="avatar">${avatarContent}</div>`;
+                            });
+                            headerAvatarHtml = `<div class="collaborative-avatars">${headerAvatarHtml}</div>`;
+
+                            // --- MODIFICATION STARTS HERE ---
+                            const usernameParts = involvedUsersData.map(userData => {
+                                const username = userData.username || 'Unknown User';
+                                const isVerified = userData.isVerified || false;
+                                return `<a href="user_profile.html?userId=${userData.userId}">${username}</a>${isVerified ? verifiedSVG : ''}`;
+                            });
+
+                            if (usernameParts.length === 2) {
+                                headerUsernameHtml = `${usernameParts[0]} <span class="collaborated-tag">collaborated with</span> ${usernameParts[1]}`;
+                            } else if (usernameParts.length > 2) {
+                                const lastUsername = usernameParts.pop(); // Remove the last element
+                                const firstUsers = usernameParts.join(', '); // Join the rest with commas
+                                headerUsernameHtml = `${firstUsers} <span class="collaborated-tag">and</span> ${lastUsername}`;
+                            } else {
+                                headerUsernameHtml = usernameParts[0] || 'Unknown User';
+                            }
+                            // --- MODIFICATION ENDS HERE ---
+
+                        } else {
+                            // For single-user posts
+                            let postUsername = usersData[postUserId] ? (usersData[postUserId].username || 'Unknown User') : 'Unknown User';
+                            const isVerified = usersData[postUserId] ? (usersData[postUserId].isVerified || false) : false;
+                            const postProfilePictureUrl = usersData[postUserId] ? usersData[postUserId].profilePictureUrl : null;
+
+                            if (postProfilePictureUrl) {
+                                headerAvatarHtml = `<div class="avatar"><img src="${postProfilePictureUrl}" alt="User Avatar"></div>`;
+                            } else {
+                                const firstLetter = (postUsername && postUsername.length > 0) ? postUsername.charAt(0).toUpperCase() : 'P';
+                                headerAvatarHtml = `<div class="avatar"><span>${firstLetter}</span></div>`;
+                            }
+                            headerUsernameHtml = `<a href="user_profile.html?userId=${postUserId}">${postUsername}</a> ${isVerified ? verifiedSVG : ''}`;
+                        }
+
+
+                        const postCard = document.createElement('div');
+                        postCard.classList.add('post-card');
+                        postCard.dataset.postid = postId; // Add postId as data attribute
+
+                        // Check if the current user is involved in the post (creator or collaborator)
+                        const isCurrentUserPost = (currentUserId === postUserId || collaborators.includes(currentUserId));
+
+                        // Determine the user to follow. If it's a collaborative post, the button should ideally not be present
+                        // or should target the *primary* post owner if not followed, or only if it's explicitly about the *creator*.
+                        // For simplicity as per the current screenshot, the follow button appears for single non-collaborative posts.
+                        // If collaborative, we will hide the follow button for now, or you can implement logic to follow any unfollowed collaborator.
+                        let userToFollowId = postUserId; // Default to primary post owner
+                        if (isCollaborative && !collaborators.includes(postUserId) && collaborators.length > 0) {
+                            userToFollowId = collaborators[0]; // If primary owner is not a collaborator (unlikely but safe), pick first collaborator
+                        }
+
+                        const isFollowing = currentUserData && currentUserData.following && currentUserData.following.includes(userToFollowId);
+
+                        const likedBy = post.likedBy || [];
+                        const hasLiked = likedBy.includes(currentUserId);
+                        const initialLikes = post.likes || 0;
+
+                        // Use a consistent time format (e.g., a few hours ago, yesterday, date)
+                        const postDate = post.timestamp ? new Date(post.timestamp.toDate()) : new Date(); // Fallback for old posts
+                        const timeAgo = formatTimeAgo(postDate);
+
+                        // Build post card HTML
+                        postCard.innerHTML = `
+                            <div class="post-header">
+                                <div class="post-header-left">
+                                    ${headerAvatarHtml}
+                                    <span class="username">
+                                        ${headerUsernameHtml}
+                                    </span>
+                                </div>
+                                <div class="post-right-actions">
+                                    ${!isCurrentUserPost && !isCollaborative ? `<button class="follow-button ${isFollowing ? 'following' : ''}" data-targetuserid="${userToFollowId}" data-username="${usersData[userToFollowId]?.username || 'Unknown User'}">
+                                        ${isFollowing ? 'Following' : 'Follow'}
+                                    </button>` : ''}
+                                    ${isCurrentUserPost ? `
+                                    <div class="post-options">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                        <div class="post-options-menu" data-postid="${postId}" data-imageurl="${post.imageUrl}" data-postuserid="${postUserId}">
+                                            <button class="delete-post-btn delete">Delete</button>
+                                        </div>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <div class="post-image">
+                                <img src="${post.imageUrl}" alt="Post image by ${post.username}">
+                            </div>
+                            <div class="post-actions">
+                                <i class="${hasLiked ? 'fas' : 'far'} fa-heart action-icon ${hasLiked ? 'liked' : ''}" data-postid="${postId}" data-postuserid="${postUserId}"></i>
+                                <i class="far fa-comment action-icon" data-postid="${postId}"></i>
+                                </div>
+                            <div class="post-likes">
+                                <span>${initialLikes} likes</span>
+                            </div>
+                            <div class="post-caption">
+                                <span class="username">
+                                    <a href="user_profile.html?userId=${postUserId}">${usersData[postUserId]?.username || 'Unknown User'}</a> ${usersData[postUserId]?.isVerified ? verifiedSVG : ''}
+                                </span>
+                                <span>${post.caption || ''}</span>
+                            </div>
+                            <div class="post-timestamp">
+                                <p style="font-size: 11px; color: #8e8e8e; padding: 0 15px 10px; margin-top: 5px;">${timeAgo}</p>
+                            </div>
+                        `;
+                        postsContainer.appendChild(postCard);
+
+                        // --- Event Listeners for Actions ---
+
+                        // Follow Button
+                        const followButton = postCard.querySelector('.follow-button');
+                        if (followButton) {
+                            followButton.addEventListener('click', async () => {
+                                const targetUserId = followButton.dataset.targetuserid;
+                                const targetUsername = followButton.dataset.username;
+
+                                if (targetUserId && currentUserId && currentUserId !== targetUserId) {
+                                    const currentUserRef = db.collection('users').doc(currentUserId);
+                                    const targetUserRef = db.collection('users').doc(targetUserId);
+
+                                    if (followButton.classList.contains('following')) {
+                                        // Unfollow logic - Show confirmation dialog
+                                        const confirmUnfollow = confirm('Do you want to unfollow this user?');
+                                        if (!confirmUnfollow) {
+                                            return; // User clicked Cancel
+                                        }
+
+                                        await currentUserRef.update({
+                                            following: firebase.firestore.FieldValue.arrayRemove(targetUserId),
+                                            followingCount: firebase.firestore.FieldValue.increment(-1) // Decrement current user's following count
+                                        });
+                                        await targetUserRef.update({
+                                            followersCount: firebase.firestore.FieldValue.increment(-1)
+                                        });
+                                        // Update local currentUserData
+                                        currentUserData.following = currentUserData.following.filter(id => id !== targetUserId);
+                                        currentUserData.followingCount = (currentUserData.followingCount || 0) - 1; // Update local count
+
+                                        console.log(`User ${currentUserId} unfollowed user ${targetUserId}`);
+                                        followButton.textContent = 'Follow';
+                                        followButton.classList.remove('following');
+                                    } else {
+                                        // Follow logic
+                                        await currentUserRef.update({
+                                            following: firebase.firestore.FieldValue.arrayUnion(targetUserId),
+                                            followingCount: firebase.firestore.FieldValue.increment(1) // Increment current user's following count
+                                        });
+                                        await targetUserRef.update({
+                                            followersCount: firebase.firestore.FieldValue.increment(1)
+                                        });
+                                        // Update local currentUserData
+                                        currentUserData.following = [...(currentUserData.following || []), targetUserId];
+                                        currentUserData.followingCount = (currentUserData.followingCount || 0) + 1; // Update local count
+
+                                        console.log(`User ${currentUserId} followed user ${targetUserId}`);
+                                        followButton.textContent = 'Following';
+                                        followButton.classList.add('following');
+                                        await addNotification('follow', targetUserId);
+                                    }
+                                }
+                            });
+                        }
+
+                        // Like Icon
+                        const likeIcon = postCard.querySelector('.post-actions .fa-heart');
+                        if (likeIcon) {
+                            likeIcon.addEventListener('click', async () => {
+                                const postId = likeIcon.dataset.postid;
+                                const postUserId = likeIcon.dataset.postuserid; // Get post owner's ID
+                                const postRef = db.collection('posts').doc(postId);
+                                const currentLikesSpan = postCard.querySelector('.post-likes span');
+                                let currentLikes = parseInt(currentLikesSpan.textContent.split(' ')[0]);
+
+                                try {
+                                    if (likeIcon.classList.contains('liked')) {
+                                        // Unlike
+                                        await postRef.update({
+                                            likes: firebase.firestore.FieldValue.increment(-1),
+                                            likedBy: firebase.firestore.FieldValue.arrayRemove(currentUserId)
+                                        });
+                                        currentLikes--;
+                                        likeIcon.classList.remove('liked', 'fas');
+                                        likeIcon.classList.add('far');
+                                        console.log(`Post ${postId} unliked!`);
+                                    } else {
+                                        // Like
+                                        await postRef.update({
+                                            likes: firebase.firestore.FieldValue.increment(1),
+                                            likedBy: firebase.firestore.FieldValue.arrayUnion(currentUserId)
+                                        });
+                                        currentLikes++;
+                                        likeIcon.classList.add('liked', 'fas');
+                                        likeIcon.classList.remove('far');
+                                        console.log(`Post ${postId} liked!`);
+                                        await addNotification('like', postUserId, postId); // Notify post owner
+                                    }
+                                    currentLikesSpan.textContent = `${currentLikes} likes`;
+                                } catch (error) {
+                                    console.error("Error updating like:", error);
+                                }
+                            });
+                        }
+
+                        // Comment Icon Click Listener
+                        const commentIcon = postCard.querySelector('.post-actions .fa-comment');
+                        if (commentIcon) {
+                            commentIcon.addEventListener('click', () => {
+                                const postId = commentIcon.dataset.postid;
+                                window.location.href = `comments.html?postId=${postId}`;
+                            });
+                        }
+
+                        // Three Dots Menu for Delete
+                        if (isCurrentUserPost) {
+                            const postOptionsIcon = postCard.querySelector('.post-options .fa-ellipsis-h');
+                            const postOptionsMenu = postCard.querySelector('.post-options-menu');
+                            const deleteButton = postCard.querySelector('.delete-post-btn');
+
+                            postOptionsIcon.addEventListener('click', (event) => {
+                                event.stopPropagation(); // Prevent click from bubbling up and closing immediately
+                                // Close other open menus
+                                document.querySelectorAll('.post-options-menu.active').forEach(menu => {
+                                    if (menu !== postOptionsMenu) {
+                                        menu.classList.remove('active');
+                                    }
+                                });
+                                postOptionsMenu.classList.toggle('active');
+                            });
+
+                            deleteButton.addEventListener('click', () => {
+                                const postIdToDelete = postOptionsMenu.dataset.postid;
+                                const imageUrlToDelete = postOptionsMenu.dataset.imageurl;
+                                const postUserIdToDelete = postOptionsMenu.dataset.postuserid; // Pass the original poster's ID
+                                deletePost(postIdToDelete, imageUrlToDelete, postUserIdToDelete);
+                                postOptionsMenu.classList.remove('active'); // Hide menu after action
+                            });
+
+                            // Close menu if clicked outside
+                            document.addEventListener('click', (event) => {
+                                if (!postOptionsMenu.contains(event.target) && !postOptionsIcon.contains(event.target)) {
+                                    postOptionsMenu.classList.remove('active');
+                                }
+                            });
+                        }
+                    });
+                    loadingMessage.style.display = 'none'; // Hide loading message after rendering
+                }, (error) => {
+                    console.error("Error setting up real-time listener for posts:", error);
+                    postsContainer.innerHTML = '<p class="no-posts-message">Error loading posts. Please try again.</p>';
+                    loadingMessage.style.display = 'none';
+                });
+        }
+
+        // Function to format timestamp for display (e.g., "5 hours ago", "Yesterday", "June 22, 2025")
+        function formatTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + " years ago";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + " months ago";
+            interval = seconds / 86400;
+            if (interval > 1) {
+                if (Math.floor(interval) === 1) return "Yesterday";
+                return Math.floor(interval) + " days ago";
+            }
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + " hours ago";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + " minutes ago";
+            return Math.floor(seconds) + " seconds ago";
+        }
+
+
+        // Footer navigation logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const navItems = document.querySelectorAll('.footer .nav-item');
+            const homeLink = document.getElementById('homeLink');
+            const searchLink = document.getElementById('searchLink');
+            const createPostLink = document.getElementById('createPostLink');
+            const notificationsLink = document.getElementById('notificationsLink');
+            const profileLink = document.getElementById('profileLink');
+
+            function setActiveLink(clickedLink) {
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                    const profileCircle = item.querySelector('.profile-circle');
+                    if (profileCircle) {
+                        profileCircle.style.borderColor = 'transparent'; // Reset border for others
+                    }
+                });
+                clickedLink.classList.add('active');
+                const profileCircle = clickedLink.querySelector('.profile-circle');
+                if (profileCircle && profileCircle.classList.contains('has-image')) {
+                    profileCircle.style.borderColor = '#0095f6'; // Apply blue border only if it has an image
+                } else if (profileCircle) {
+                    profileCircle.style.borderColor = 'transparent'; // Ensure no border for initial
+                }
+            }
+
+            // Set active link based on current page URL
+            const currentPath = window.location.pathname.split('/').pop();
+            if (currentPath === 'search.html') {
+                setActiveLink(searchLink);
+            } else if (currentPath === 'create.html') {
+                setActiveLink(createPostLink);
+            } else if (currentPath === 'notifications.html') {
+                setActiveLink(notificationsLink);
+            } else if (currentPath === 'profile.html') {
+                setActiveLink(profileLink);
+            } else {
+                setActiveLink(homeLink); // Default to home if no specific match
+            }
+
+            // Add click listeners to navigation items
+            navItems.forEach(item => {
+                item.addEventListener('click', function(event) {
+                    // Prevent default behavior only if it's the active link or a placeholder '#'
+                    if (this.getAttribute('href') === '#' || this.classList.contains('active')) {
+                        event.preventDefault();
+                    }
+                    setActiveLink(this);
+                });
+            });
+
+            // Initial call to update footer profile picture after user authentication
+            // The onAuthStateChanged listener will handle the actual data fetching.
+            // This just ensures the element exists for the updateFooterProfilePicture function.
+            updateFooterProfilePicture(null, 'P'); // Default placeholder
+
+            // DM Icon Click Listener
+            dmIcon.addEventListener('click', () => {
+                window.location.href = 'dm.html'; // Redirect to dm.html
+            });
+        });
+    </script>
+</body>
+</html>
