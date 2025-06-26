@@ -1608,6 +1608,21 @@
                 });
         }
 
+        /**
+         * Formats a number of likes into a human-readable string (e.g., 1.2K, 1M).
+         * @param {number} num The number of likes.
+         * @returns {string} The formatted string.
+         */
+        function formatLikes(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+            }
+            return num.toString();
+        }
+
         // Function to fetch and display posts (using real-time listener with shuffling)
         function listenForPosts() {
             loadingMessage.textContent = 'Loading posts...';
@@ -1730,6 +1745,7 @@
                         const likedBy = post.likedBy || [];
                         const hasLiked = likedBy.includes(currentUserId);
                         const initialLikes = post.likes || 0;
+                        const formattedLikes = formatLikes(initialLikes); // Format the likes here
 
                         // Use a consistent time format (e.g., a few hours ago, yesterday, date)
                         const postDate = post.timestamp ? new Date(post.timestamp.toDate()) : new Date(); // Fallback for old posts
@@ -1766,7 +1782,7 @@
                                 <i class="far fa-comment action-icon" data-postid="${postId}"></i>
                                 </div>
                             <div class="post-likes">
-                                <span>${initialLikes} likes</span>
+                                <span>${formattedLikes} likes</span>
                             </div>
                             <div class="post-caption">
                                 <span class="username">
@@ -1844,7 +1860,7 @@
                                 const postUserId = likeIcon.dataset.postuserid; // Get post owner's ID
                                 const postRef = db.collection('posts').doc(postId);
                                 const currentLikesSpan = postCard.querySelector('.post-likes span');
-                                let currentLikes = parseInt(currentLikesSpan.textContent.split(' ')[0]);
+                                let currentLikes = parseInt(post.likes || 0); // Get actual number from post object
 
                                 try {
                                     if (likeIcon.classList.contains('liked')) {
@@ -1869,7 +1885,7 @@
                                         console.log(`Post ${postId} liked!`);
                                         await addNotification('like', postUserId, postId); // Notify post owner
                                     }
-                                    currentLikesSpan.textContent = `${currentLikes} likes`;
+                                    currentLikesSpan.textContent = `${formatLikes(currentLikes)} likes`; // Update with formatted number
                                 } catch (error) {
                                     console.error("Error updating like:", error);
                                 }
