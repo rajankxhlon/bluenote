@@ -725,6 +725,17 @@
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
         }
 
+        // --- NEW FUNCTION: Format numbers like 1k, 10k, 1M ---
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+            }
+            return num;
+        }
+
         // --- Authentication and Data Loading ---
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
@@ -778,9 +789,9 @@
                     console.error("Target user document does not exist for UID:", targetUserId);
                     userProfileUsername.textContent = 'User Not Found';
                     userBioText.textContent = 'This profile does not exist.';
-                    userPostsCountSpan.textContent = 0;
-                    userFollowersCountSpan.textContent = 0;
-                    userFollowingCountSpan.textContent = 0;
+                    userPostsCountSpan.textContent = formatNumber(0); // Use formatNumber
+                    userFollowersCountSpan.textContent = formatNumber(0); // Use formatNumber
+                    userFollowingCountSpan.textContent = formatNumber(0); // Use formatNumber
                     userPostsGrid.innerHTML = '<p class="no-posts-message">User not found.</p>';
                 }
             }, (error) => {
@@ -813,7 +824,7 @@
                                     totalCount++;
                                 }
                             });
-                            userPostsCountSpan.textContent = totalCount;
+                            userPostsCountSpan.textContent = formatNumber(totalCount); // Use formatNumber
                             
                             // Also ensure the "No posts yet." message is updated correctly
                             if (totalCount === 0) {
@@ -914,8 +925,8 @@
             }
 
             // Counts - Posts count will be updated by listenForTargetUserPostCount()
-            userFollowersCountSpan.textContent = targetUserData.followersCount || 0;
-            userFollowingCountSpan.textContent = targetUserData.followingCount || 0;
+            userFollowersCountSpan.textContent = formatNumber(targetUserData.followersCount || 0); // Use formatNumber
+            userFollowingCountSpan.textContent = formatNumber(targetUserData.followingCount || 0); // Use formatNumber
         }
 
         function displayProfileActions() {
@@ -947,7 +958,7 @@
 
             try {
                 const isFollowing = currentUserData.following && currentUserData.following.includes(targetUserId);
-                let currentFollowersCount = parseInt(userFollowersCountSpan.textContent);
+                let currentFollowersCount = targetUserData.followersCount || 0; // Use actual number for logic
 
                 if (isFollowing) {
                     // Unfollow
@@ -965,7 +976,7 @@
                     // Update UI immediately
                     followButton.textContent = 'Follow';
                     followButton.classList.remove('following');
-                    userFollowersCountSpan.textContent = currentFollowersCount - 1; // Update count
+                    userFollowersCountSpan.textContent = formatNumber(currentFollowersCount - 1); // Update count with formatNumber
                     
                     // Update currentUserData locally to reflect the change for subsequent checks
                     currentUserData.following = currentUserData.following.filter(id => id !== targetUserId);
@@ -994,7 +1005,7 @@
                     // Update UI immediately
                     followButton.textContent = 'Following';
                     followButton.classList.add('following');
-                    userFollowersCountSpan.textContent = currentFollowersCount + 1; // Update count
+                    userFollowersCountSpan.textContent = formatNumber(currentFollowersCount + 1); // Update count with formatNumber
 
                     // Update currentUserData locally to reflect the change for subsequent checks
                     if (!currentUserData.following) {
@@ -1002,6 +1013,9 @@
                     }
                     currentUserData.following.push(targetUserId);
                 }
+                 // Ensure targetUserData is also updated for immediate UI consistency
+                 targetUserData.followersCount = isFollowing ? currentFollowersCount - 1 : currentFollowersCount + 1;
+
             } catch (error) {
                 console.error("Error toggling follow status:", error);
                 alert("Failed to update follow status. Please try again.");
@@ -1143,7 +1157,7 @@
                         <i class="far fa-comment action-icon" data-postid="${postId}"></i>
                     </div>
                     <div class="post-likes-comments">
-                        <span class="likes-count">${numLikes} likes</span>
+                        <span class="likes-count">${formatNumber(numLikes)} likes</span>
                     </div>
                     <div class="post-caption">
                         <span class="caption-username">
@@ -1186,7 +1200,16 @@
                         const postId = likeIcon.dataset.postid;
                         const postRef = db.collection('posts').doc(postId);
                         const currentLikesSpan = card.querySelector('.likes-count');
-                        let currentLikes = parseInt(currentLikesSpan.textContent.split(' ')[0]);
+                        let currentLikes = parseInt(currentLikesSpan.textContent.split(' ')[0]); // Get number before "likes"
+
+                        // Re-fetch post data to ensure accurate like count for calculation
+                        const postDoc = await postRef.get();
+                        if (!postDoc.exists) {
+                            console.error("Post not found during like update.");
+                            return;
+                        }
+                        const postData = postDoc.data();
+                        currentLikes = postData.likes || 0; // Use actual number from DB
 
                         try {
                             if (likeIcon.classList.contains('liked')) {
@@ -1226,7 +1249,7 @@
                                     });
                                 }
                             }
-                            currentLikesSpan.textContent = `${currentLikes} likes`;
+                            currentLikesSpan.textContent = `${formatNumber(currentLikes)} likes`; // Format and update
                         } catch (error) {
                             console.error("Error updating like on user profile:", error);
                         }
