@@ -943,6 +943,17 @@
             </g>
         </svg>`;
 
+        // Helper function to format numbers (e.g., 1200 -> 1.2K, 1200000 -> 1.2M)
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+            }
+            return num.toString();
+        }
+
         // Function to update the footer profile picture
         function updateFooterProfilePicture(profilePictureUrl, username) {
             footerProfileCircle.innerHTML = ''; // Clear previous content
@@ -1040,10 +1051,10 @@
             }
             bioInput.value = bioContent;
 
-            // Counts
-            postsCountSpan.textContent = currentUserData.postsCount || 0;
-            followersCountSpan.textContent = currentUserData.followersCount || 0;
-            followingCountSpan.textContent = currentUserData.followingCount || 0;
+            // Counts - Using formatNumber for display
+            postsCountSpan.textContent = formatNumber(currentUserData.postsCount || 0);
+            followersCountSpan.textContent = formatNumber(currentUserData.followersCount || 0);
+            followingCountSpan.textContent = formatNumber(currentUserData.followingCount || 0);
         }
 
         // Helper to format Firestore Timestamps
@@ -1116,7 +1127,7 @@
                     if (!myPostsGrid.contains(noPostsMessage)) {
                         myPostsGrid.appendChild(noPostsMessage);
                     }
-                    postsCountSpan.textContent = 0;
+                    postsCountSpan.textContent = formatNumber(0); // Also format this
                     return;
                 }
 
@@ -1200,7 +1211,7 @@
                             <i class="far fa-comment action-icon" data-postid="${postId}"></i>
                         </div>
                         <div class="post-likes-comments">
-                            <span class="likes-count">${numLikes} likes</span>
+                            <span class="likes-count">${formatNumber(numLikes)} likes</span>
                         </div>
                         <div class="post-caption">
                             <span class="caption-username">
@@ -1245,7 +1256,18 @@
                             const postId = likeIcon.dataset.postid;
                             const postRef = db.collection('posts').doc(postId);
                             const currentLikesSpan = card.querySelector('.likes-count');
-                            let currentLikes = parseInt(currentLikesSpan.textContent.split(' ')[0]);
+                            // Parse current likes from the formatted string, then get the raw number
+                            let currentLikesText = currentLikesSpan.textContent.split(' ')[0];
+                            let currentLikes;
+
+                            if (currentLikesText.endsWith('K')) {
+                                currentLikes = parseFloat(currentLikesText) * 1000;
+                            } else if (currentLikesText.endsWith('M')) {
+                                currentLikes = parseFloat(currentLikesText) * 1000000;
+                            } else {
+                                currentLikes = parseInt(currentLikesText);
+                            }
+
 
                             try {
                                 if (likeIcon.classList.contains('liked')) {
@@ -1269,7 +1291,7 @@
                                     likeIcon.classList.remove('far');
                                     console.log(`Post ${postId} liked!`);
                                 }
-                                currentLikesSpan.textContent = `${currentLikes} likes`;
+                                currentLikesSpan.textContent = `${formatNumber(currentLikes)} likes`; // Format updated count
                             } catch (error) {
                                 console.error("Error updating like on profile:", error);
                             }
@@ -1288,7 +1310,7 @@
                 });
 
                 // Update counts after all posts are processed
-                postsCountSpan.textContent = allPosts.length;
+                postsCountSpan.textContent = formatNumber(allPosts.length); // Format this count too
                 console.log('Finished loading posts. Total displayed:', allPosts.length);
 
             } catch (error) {
