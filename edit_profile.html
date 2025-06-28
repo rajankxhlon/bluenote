@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: #121212; /* Dark background */
+            color: #f5f5f5; /* Light text for dark theme */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            background-color: #1a1a1a;
+            border-bottom: 1px solid #262626;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+            max-width: 600px; /* Match main content width */
+            box-sizing: border-box;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+        .header .back-arrow {
+            font-size: 24px;
+            color: #f5f5f5;
+            cursor: pointer;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 20px;
+            color: #f5f5f5;
+        }
+
+        .edit-profile-container {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+            margin-top: -1px; /* Overlap with header border */
+            border-top: none; /* Remove redundant top border */
+            display: flex;
+            flex-direction: column;
+            gap: 25px; /* Space between sections */
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #f5f5f5;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #262626;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #8e8e8e;
+            font-weight: bold;
+        }
+
+        .form-group textarea,
+        .form-group input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #363636;
+            border-radius: 6px;
+            background-color: #262626;
+            color: #f5f5f5;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .form-group textarea:focus,
+        .form-group input[type="password"]:focus {
+            outline: none;
+            border-color: #0095f6;
+            box-shadow: 0 0 0 3px rgba(0, 149, 246, 0.2);
+        }
+
+        .form-group textarea {
+            resize: vertical; /* Allow vertical resizing */
+            min-height: 100px;
+            max-height: 200px;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 12px;
+            background-color: #0095f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .action-button:hover {
+            background-color: #007bb5;
+        }
+
+        .action-button:active {
+            transform: translateY(1px);
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 14px;
+            display: none; /* Hidden by default */
+        }
+
+        .message.success {
+            background-color: #28a74533; /* Green with transparency */
+            color: #28a745; /* Darker green text */
+        }
+
+        .message.error {
+            background-color: #dc354533; /* Red with transparency */
+            color: #dc3545; /* Darker red text */
+        }
+
+        /* Adjustments for smaller screens */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .header {
+                padding: 10px 15px;
+            }
+            .header h2 {
+                font-size: 18px;
+            }
+            .edit-profile-container {
+                padding: 20px;
+            }
+            .section-title {
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+            .form-group label {
+                font-size: 13px;
+            }
+            .form-group textarea,
+            .form-group input[type="password"] {
+                padding: 10px;
+                font-size: 15px;
+            }
+            .action-button {
+                padding: 10px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <i class="fas fa-arrow-left back-arrow" id="backArrow"></i>
+        <h2>Edit Profile</h2>
+        <span></span> </div>
+
+    <div class="edit-profile-container">
+        <div class="bio-section">
+            <h3 class="section-title">Edit Bio</h3>
+            <div class="form-group">
+                <label for="bioInput">Bio</label>
+                <textarea id="bioInput" placeholder="Tell us about yourself..."></textarea>
+            </div>
+            <button class="action-button" id="saveBioBtn">Save Bio</button>
+            <div id="bioMessage" class="message"></div>
+        </div>
+
+        <div class="password-section">
+            <h3 class="section-title">Change Password</h3>
+            <div class="form-group">
+                <label for="currentPassword">Current Password</label>
+                <input type="password" id="currentPassword" placeholder="Enter current password">
+            </div>
+            <div class="form-group">
+                <label for="newPassword">New Password</label>
+                <input type="password" id="newPassword" placeholder="Enter new password">
+            </div>
+            <div class="form-group">
+                <label for="confirmNewPassword">Confirm New Password</label>
+                <input type="password" id="confirmNewPassword" placeholder="Confirm new password">
+            </div>
+            <button class="action-button" id="changePasswordBtn">Change Password</button>
+            <div id="passwordMessage" class="message"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Your Firebase project configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdu3d0_qEDZaXkBkJAO0VY0htme6_EMyM",
+            authDomain: "bluegram-27a79.firebaseapp.com",
+            databaseURL: "https://bluegram-27a79-default-rtdb.firebaseio.com",
+            projectId: "bluegram-27a79",
+            storageBucket: "bluegram-27a79.firebasestorage.app",
+            messagingSenderId: "780485443121",
+            appId: "1:780485443121:web:f7469d2264293fcbdf5f10",
+            measurementId: "G-YF5S9HK2Q5"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // DOM Elements
+        const backArrow = document.getElementById('backArrow');
+        const bioInput = document.getElementById('bioInput');
+        const saveBioBtn = document.getElementById('saveBioBtn');
+        const bioMessage = document.getElementById('bioMessage');
+        const currentPasswordInput = document.getElementById('currentPassword');
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+        const passwordMessage = document.getElementById('passwordMessage');
+
+        let currentUser = null;
+
+        // Authentication state observer
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                // Fetch and display current bio
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                if (userDoc.exists) {
+                    bioInput.value = userDoc.data().bio || '';
+                }
+            } else {
+                console.log('No user logged in, redirecting to login.html');
+                window.location.href = 'login.html';
+            }
+        });
+
+        // Back arrow functionality
+        backArrow.addEventListener('click', () => {
+            window.history.back(); // Go back to the previous page (profile.html)
+        });
+
+        // Function to display messages
+        function showMessage(element, message, type) {
+            element.textContent = message;
+            element.className = `message ${type}`; // Add type class (success or error)
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 3000); // Hide after 3 seconds
+        }
+
+        // Save Bio functionality
+        saveBioBtn.addEventListener('click', async () => {
+            if (!currentUser) {
+                showMessage(bioMessage, 'Please log in to update your bio.', 'error');
+                return;
+            }
+
+            const newBio = bioInput.value.trim();
+
+            try {
+                await db.collection('users').doc(currentUser.uid).update({
+                    bio: newBio
+                });
+                showMessage(bioMessage, 'Bio updated successfully!', 'success');
+            } catch (error) {
+                console.error("Error updating bio:", error);
+                showMessage(bioMessage, 'Failed to update bio. Please try again.', 'error');
+            }
+        });
+
+        // Change Password functionality
+        changePasswordBtn.addEventListener('click', async () => {
+            if (!currentUser) {
+                showMessage(passwordMessage, 'Please log in to change your password.', 'error');
+                return;
+            }
+
+            const currentPassword = currentPasswordInput.value;
+            const newPassword = newPasswordInput.value;
+            const confirmNewPassword = confirmNewPasswordInput.value;
+
+            if (newPassword.length < 6) {
+                showMessage(passwordMessage, 'New password must be at least 6 characters long.', 'error');
+                return;
+            }
+
+            if (newPassword !== confirmNewPassword) {
+                showMessage(passwordMessage, 'New password and confirm password do not match.', 'error');
+                return;
+            }
+
+            // Re-authenticate user before changing password
+            const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, currentPassword);
+            try {
+                await currentUser.reauthenticateWithCredential(credential);
+                await currentUser.updatePassword(newPassword);
+                showMessage(passwordMessage, 'Password updated successfully!', 'success');
+                // Clear password fields
+                currentPasswordInput.value = '';
+                newPasswordInput.value = '';
+                confirmNewPasswordInput.value = '';
+            } catch (error) {
+                console.error("Error changing password:", error);
+                let errorMessage = 'Failed to change password. Please try again.';
+                if (error.code === 'auth/wrong-password') {
+                    errorMessage = 'Current password is incorrect.';
+                } else if (error.code === 'auth/requires-recent-login') {
+                    errorMessage = 'Please log out and log in again to change your password.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'New password is too weak.';
+                }
+                showMessage(passwordMessage, errorMessage, 'error');
+            }
+        });
+    </script>
+</body>
+</html>
