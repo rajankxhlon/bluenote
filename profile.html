@@ -8,7 +8,7 @@
     <style>
         /* Global Styles */
         body {
-            font-family: -apple-system, BlinkMacMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             background-color: #121212; /* Dark background */
             color: #f5f5f5; /* Light text for dark theme */
@@ -50,49 +50,89 @@
             vertical-align: middle;
         }
 
-        .header .right-section {
-            position: relative;
-        }
-
         .header .menu-icon {
             font-size: 24px;
             color: #f5f5f5;
             cursor: pointer;
         }
 
-        .header .menu-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background-color: #262626;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            overflow: hidden;
+        /* NEW: Menu Overlay and Content */
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px); /* Optional: blur effect */
             z-index: 1001;
-            display: none;
-            min-width: 180px;
+            display: none; /* Hidden by default */
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
-        .header .menu-dropdown.show {
+        .menu-overlay.active {
             display: block;
+            opacity: 1;
         }
 
-        .header .menu-dropdown button {
+        .menu-content {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 250px; /* Width of the menu */
+            height: 100%;
+            background-color: #1a1a1a;
+            border-left: 1px solid #262626;
+            transform: translateX(100%); /* Start off-screen */
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .menu-overlay.active .menu-content {
+            transform: translateX(0); /* Slide in */
+        }
+
+        .menu-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .menu-header .close-icon {
+            font-size: 24px;
+            color: #f5f5f5;
+            cursor: pointer;
+        }
+
+        .menu-item {
             display: block;
             width: 100%;
-            padding: 12px 15px;
-            text-align: left;
-            background: none;
-            border: none;
+            padding: 15px 10px;
+            margin-bottom: 10px;
+            background-color: #262626;
             color: #f5f5f5;
+            border: none;
+            border-radius: 8px;
             font-size: 16px;
+            text-align: left;
             cursor: pointer;
-            transition: background-color 0.2s ease;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            text-decoration: none; /* For anchor tags if used */
         }
 
-        .header .menu-dropdown button:hover {
+        .menu-item:hover {
             background-color: #363636;
+            transform: translateY(-2px);
         }
+
+        .menu-item:active {
+            transform: translateY(0);
+        }
+
 
         /* Main Content Area */
         .main-content {
@@ -117,7 +157,6 @@
         }
 
         .profile-picture-container {
-            position: relative;
             width: 120px;
             height: 120px;
             border-radius: 50%;
@@ -128,6 +167,10 @@
             overflow: hidden;
             margin-bottom: 10px;
             border: 2px solid #363636; /* Default border */
+        }
+
+        .profile-picture-container.editable {
+            cursor: pointer;
         }
 
         .profile-picture-container img {
@@ -143,76 +186,6 @@
             color: #f5f5f5;
         }
 
-        .profile-picture-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            cursor: pointer;
-        }
-
-        .profile-picture-container:hover .profile-picture-overlay {
-            opacity: 1;
-        }
-
-        .profile-picture-overlay i {
-            color: #f5f5f5;
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-
-        .profile-picture-overlay span {
-            color: #f5f5f5;
-            font-size: 14px;
-            text-align: center;
-        }
-
-        .profile-picture-options {
-            position: absolute;
-            background-color: #262626;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            overflow: hidden;
-            z-index: 100;
-            display: none;
-            flex-direction: column;
-            /* Will be dynamically positioned */
-        }
-
-        .profile-picture-options.show {
-            display: flex;
-        }
-
-        .profile-picture-options button {
-            display: block;
-            width: 100%;
-            padding: 10px 15px;
-            text-align: left;
-            background: none;
-            border: none;
-            color: #f5f5f5;
-            font-size: 15px;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-
-        .profile-picture-options button:hover {
-            background-color: #363636;
-        }
-
-        .profile-picture-options input[type="file"] {
-            display: none;
-        }
-
         .bio-section {
             width: 100%;
             text-align: center;
@@ -225,55 +198,6 @@
             margin-bottom: 10px;
             white-space: pre-wrap; /* Preserve whitespace and break lines */
         }
-
-        .bio-input {
-            width: 100%;
-            background-color: #262626;
-            border: 1px solid #363636;
-            border-radius: 4px;
-            padding: 8px 10px;
-            color: #f5f5f5;
-            font-size: 15px;
-            resize: vertical;
-            min-height: 60px;
-            box-sizing: border-box;
-        }
-
-        .bio-input:focus {
-            outline: none;
-            border-color: #0095f6;
-        }
-
-        .bio-buttons {
-            margin-top: 10px;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .bio-buttons button {
-            background-color: #0095f6;
-            color: #fff;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-
-        .bio-buttons button.cancel {
-            background-color: #363636;
-            color: #f5f5f5;
-        }
-
-        .bio-buttons button:hover {
-            background-color: #007acb;
-        }
-        .bio-buttons button.cancel:hover {
-            background-color: #555;
-        }
-
 
         .stats-section {
             display: flex;
@@ -300,7 +224,29 @@
             margin-top: 2px;
         }
 
-        .my-posts-section {
+        .profile-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .profile-actions button {
+            background-color: #333333;
+            color: #f5f5f5;
+            border: 1px solid #555555;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .profile-actions button:hover {
+            background-color: #444444;
+        }
+
+        .user-posts-section {
             width: 100%;
             max-width: 600px;
             margin-top: 30px;
@@ -308,13 +254,13 @@
             padding-top: 20px;
         }
 
-        .my-posts-section h3 {
+        .user-posts-section h3 {
             text-align: center;
             color: #f5f5f5;
             margin-bottom: 20px;
         }
 
-        /* --- NEW/UPDATED: Post Card Styles --- */
+        /* Post Card Styles */
         .post-card {
             background-color: #1a1a1a;
             border-radius: 8px;
@@ -322,7 +268,7 @@
             margin-bottom: 20px;
             width: 100%; /* Take full width of its container */
             overflow: hidden;
-            cursor: pointer; /* Indicate it's clickable */
+            cursor: pointer;
         }
 
         .post-card:hover {
@@ -333,7 +279,7 @@
             display: flex;
             align-items: center;
             padding: 12px 15px;
-            position: relative; /* For the three dots menu */
+            position: relative;
         }
 
         .post-header .profile-pic {
@@ -366,6 +312,7 @@
             font-size: 15px;
             display: flex;
             align-items: center;
+            flex-wrap: wrap; /* Allow wrapping for long usernames/collab text */
         }
 
         .post-header .username .verified-badge {
@@ -373,26 +320,32 @@
             height: 14px;
             margin-left: 5px;
         }
+        
+        /* NEW: Collab Text Style */
+        .post-header .collab-text {
+            font-size: 13px;
+            color: #8e8e8e;
+            margin-left: 5px;
+        }
 
         .post-image {
             width: 100%;
-            max-height: 500px; /* Limit height */
-            object-fit: contain; /* Keep aspect ratio, fit within bounds */
+            max-height: 500px;
+            object-fit: contain;
             display: block;
-            background-color: #000; /* Black background for images */
+            background-color: #000;
         }
 
-        /* NEW: Styles for individual post actions (icons) */
         .post-actions {
             padding: 10px 15px;
-            display: flex; /* Make it a flex container */
+            display: flex;
             align-items: center;
-            gap: 15px; /* Space between icons */
+            gap: 15px;
         }
 
         .post-actions .action-icon {
             font-size: 24px;
-            color: #f5f5f5; /* Icon color */
+            color: #f5f5f5;
             cursor: pointer;
             transition: opacity 0.2s ease;
         }
@@ -401,32 +354,56 @@
             opacity: 0.7;
         }
 
-        /* Specific styling for the like icon if it's "liked" */
         .post-actions .action-icon.liked {
-            color: #ed4956; /* Red for liked heart */
+            color: #ed4956;
         }
 
-        /* NEW: Styles for like and comment counts text */
         .post-likes-comments {
-            padding: 0 15px 10px; /* Adjust padding as needed */
+            padding: 0 15px 10px;
             font-size: 14px;
             color: #f5f5f5;
             font-weight: bold;
-            display: flex; /* Arrange likes and comments side-by-side */
-            gap: 15px; /* Space between likes and comments text */
+            display: flex;
+            gap: 15px;
         }
 
         .post-likes-comments .likes-count,
         .post-likes-comments .comments-count {
-            color: #f5f5f5; /* Ensure text color is light */
+            color: #f5f5f5;
         }
 
+        /* --- UPDATED CSS FOR CAPTION WITH USERNAME AND INLINE TEXT --- */
         .post-caption {
             padding: 0 15px 10px;
             font-size: 14px;
             color: #f5f5f5;
-            white-space: pre-wrap; /* Preserve formatting */
+            white-space: pre-wrap; /* Preserve formatting for breaks within caption text */
+            display: flex; /* Use flexbox to put username and text on same line */
+            align-items: baseline; /* Align items at their text baselines */
+            flex-wrap: wrap; /* Allow caption text to wrap if it's too long */
         }
+
+        .post-caption .caption-username {
+            font-weight: bold;
+            color: #f5f5f5;
+            margin-right: 5px; /* Space between username and caption text */
+            display: inline-flex; /* Use inline-flex to contain the username and badge */
+            align-items: center;
+            white-space: nowrap; /* Prevent username and badge from wrapping */
+        }
+
+        .post-caption .caption-username .verified-badge {
+            width: 14px;
+            height: 14px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+        .post-caption .caption-text {
+            /* No specific styling needed unless you want it different from default */
+            flex-grow: 1; /* Allows caption text to take up remaining space */
+        }
+        /* --- END UPDATED CSS FOR CAPTION --- */
 
         .post-timestamp {
             padding: 0 15px 12px;
@@ -439,59 +416,54 @@
             padding: 30px 0;
             color: #8e8e8e;
             font-size: 16px;
+            display: none; /* Initially hidden, shown by JS if no posts */
         }
 
         /* Post Options (Three Dots Menu) */
         .post-options {
             position: absolute;
-            top: 50%; /* Align vertically with the username */
+            top: 10px;
             right: 15px;
-            transform: translateY(-50%);
             font-size: 20px;
-            color: #f5f5f5;
+            color: #8e8e8e;
             cursor: pointer;
-            z-index: 10; /* Ensure it's above other elements */
         }
 
-        .post-options-dropdown {
+        .post-options-menu {
             position: absolute;
+            top: 40px;
+            right: 10px;
             background-color: #262626;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            z-index: 10;
             overflow: hidden;
-            z-index: 20; /* Higher than post-options icon */
             display: none;
-            min-width: 150px;
-            top: 30px; /* Adjust relative to the icon */
-            right: 0;
         }
 
-        .post-options-dropdown.show {
-            display: block;
-        }
-
-        .post-options-dropdown button {
+        .post-options-menu button {
             display: block;
             width: 100%;
-            padding: 10px 15px;
-            text-align: left;
-            background: none;
+            padding: 10px 20px;
+            background-color: transparent;
             border: none;
             color: #f5f5f5;
-            font-size: 15px;
+            font-size: 14px;
+            text-align: left;
             cursor: pointer;
             transition: background-color 0.2s ease;
         }
 
-        .post-options-dropdown button:hover {
+        .post-options-menu button:hover {
             background-color: #363636;
         }
 
-        .post-options-dropdown button.delete-btn {
-            color: #ed4956; /* Red for delete */
+        .post-options-menu button.delete {
+            color: #ed4956;
+            font-weight: bold;
         }
 
-        /* Footer Navigation (Copied from other pages) */
+        /* Footer Navigation */
         .footer {
             background-color: #1a1a1a;
             border-top: 1px solid #262626;
@@ -535,7 +507,7 @@
             color: #fff;
             overflow: hidden;
             margin-bottom: 3px;
-            border: 2px solid transparent; /* Added this for consistency */
+            border: 2px solid transparent;
         }
 
         .footer .profile-circle.has-image {
@@ -578,12 +550,6 @@
             .profile-picture-container .initials {
                 font-size: 40px;
             }
-            .profile-picture-overlay i {
-                font-size: 20px;
-            }
-            .profile-picture-overlay span {
-                font-size: 13px;
-            }
             .stats-section {
                 margin-top: 15px;
             }
@@ -593,14 +559,13 @@
             .stat-item .label {
                 font-size: 12px;
             }
-            .my-posts-section {
+            .user-posts-section {
                 margin-top: 20px;
                 padding-top: 15px;
             }
-            .my-posts-section h3 {
+            .user-posts-section h3 {
                 font-size: 18px;
             }
-            /* Post card responsive */
             .post-card {
                 margin-bottom: 15px;
             }
@@ -619,19 +584,39 @@
             }
             .post-actions {
                 font-size: 22px;
-                padding: 8px 12px; /* Adjusted padding */
-                gap: 12px; /* Adjusted gap */
+                padding: 8px 12px;
+                gap: 12px;
             }
             .post-likes-comments {
                 font-size: 13px;
-                padding: 0 12px 8px; /* Adjusted padding */
-                gap: 12px; /* Adjusted gap */
+                padding: 0 12px 8px;
+                gap: 12px;
             }
+            /* Adjusted for new caption structure */
+            .post-caption {
+                font-size: 13px;
+                padding: 0 12px 8px; /* Adjusted padding */
+            }
+            .post-caption .caption-username {
+                font-size: 13px; /* Ensure consistency */
+            }
+            .post-caption .caption-username .verified-badge {
+                width: 12px; /* Smaller badge for smaller screens */
+                height: 12px;
+            }
+            /* End adjusted for new caption structure */
             .post-timestamp {
                 font-size: 11px;
             }
-            .post-options {
-                font-size: 18px;
+
+            /* Responsive for Menu */
+            .menu-content {
+                width: 200px; /* Smaller menu on smaller screens */
+                padding: 15px;
+            }
+            .menu-item {
+                padding: 12px 8px;
+                font-size: 15px;
             }
         }
 
@@ -641,9 +626,6 @@
             }
             .header .username-display {
                 font-size: 16px;
-            }
-            .header .menu-icon {
-                font-size: 18px;
             }
             .profile-section {
                 padding: 15px;
@@ -656,23 +638,6 @@
             .profile-picture-container .initials {
                 font-size: 30px;
             }
-            .profile-picture-overlay i {
-                font-size: 18px;
-            }
-            .profile-picture-overlay span {
-                font-size: 12px;
-            }
-            .bio-input {
-                min-height: 50px;
-                font-size: 14px;
-            }
-            .bio-text {
-                font-size: 14px;
-            }
-            .bio-buttons button {
-                padding: 7px 12px;
-                font-size: 13px;
-            }
             .stats-section {
                 margin-top: 10px;
                 width: 100%;
@@ -684,14 +649,13 @@
             .stat-item .label {
                 font-size: 11px;
             }
-            .my-posts-section {
+            .user-posts-section {
                 margin-top: 15px;
                 padding-top: 10px;
             }
-            .my-posts-section h3 {
+            .user-posts-section h3 {
                 font-size: 16px;
             }
-            /* Post card responsive */
             .post-card {
                 margin-bottom: 10px;
             }
@@ -711,22 +675,38 @@
             .post-actions {
                 font-size: 20px;
                 gap: 10px;
-                padding: 6px 10px; /* Adjusted padding */
+                padding: 6px 10px;
             }
             .post-likes-comments {
                 font-size: 12px;
-                padding: 0 10px 6px; /* Adjusted padding */
-                gap: 10px; /* Adjusted gap */
+                padding: 0 10px 6px;
+                gap: 10px;
             }
+            /* Adjusted for new caption structure */
+            .post-caption {
+                font-size: 12px;
+                padding: 0 10px 6px;
+            }
+            .post-caption .caption-username {
+                font-size: 12px;
+            }
+            .post-caption .caption-username .verified-badge {
+                width: 10px;
+                height: 10px;
+            }
+            /* End adjusted for new caption structure */
             .post-timestamp {
                 font-size: 10px;
                 padding: 0 10px 10px;
             }
-            .post-options {
-                font-size: 16px;
+
+            /* Responsive for Menu */
+            .menu-content {
+                width: 180px; /* Even smaller menu on very small screens */
+                padding: 10px;
             }
-            .post-options-dropdown {
-                min-width: 120px;
+            .menu-item {
+                padding: 10px 6px;
                 font-size: 14px;
             }
         }
@@ -735,42 +715,31 @@
 <body>
     <div class="header">
         <div class="left-section">
-            <span class="username-display" id="profileUsername">Loading...</span>
+            <span class="username-display" id="currentUsername">Loading...</span>
             <span id="verifiedBadgePlaceholder"></span>
         </div>
-        <div class="right-section">
-            <i class="fas fa-ellipsis-v menu-icon" id="menuIcon"></i>
-            <div class="menu-dropdown" id="menuDropdown">
-                <button id="logoutButton">Log Out</button>
-                <button id="requestVerificationButton">Request for Verification</button>
-            </div>
-        </div>
+        <i class="fas fa-bars menu-icon" id="menuIcon"></i>
     </div>
 
+    <div class="menu-overlay" id="menuOverlay">
+        <div class="menu-content" id="menuContent">
+            <div class="menu-header">
+                <i class="fas fa-times close-icon" id="closeMenuIcon"></i>
+            </div>
+            <button class="menu-item" id="getVerifiedBtn">Get Verified</button>
+            <button class="menu-item" id="logoutBtn">Logout</button>
+        </div>
+    </div>
     <div class="main-content">
         <div class="profile-section">
-            <div class="profile-picture-container" id="profilePictureContainer">
+            <input type="file" id="profilePictureInput" accept="image/*" style="display: none;">
+            <div class="profile-picture-container editable" id="profilePictureContainer">
                 <span class="initials" id="profileInitials"></span>
                 <img id="profileImage" src="" alt="Profile Picture" style="display: none;">
-                <div class="profile-picture-overlay" id="profilePictureOverlay">
-                    <i class="fas fa-camera"></i>
-                    <span>Change Photo</span>
-                </div>
-                <input type="file" id="profilePictureInput" accept="image/*" style="display: none;">
-                <div class="profile-picture-options" id="profilePictureOptions">
-                    <button id="explicitUploadPhotoButton">Upload New Photo</button>
-                    <button id="removePhotoButton" style="display: none;">Remove Photo</button>
-                    <button id="cancelUploadButton">Cancel</button>
-                </div>
             </div>
 
             <div class="bio-section">
                 <p class="bio-text" id="bioText"></p>
-                <textarea class="bio-input" id="bioInput" placeholder="Add your bio here..." style="display: none;"></textarea>
-                <div class="bio-buttons" id="bioButtons" style="display: none;">
-                    <button class="cancel" id="cancelBioButton">Cancel</button>
-                    <button id="saveBioButton">Save</button>
-                </div>
             </div>
 
             <div class="stats-section">
@@ -787,11 +756,15 @@
                     <span class="label">Following</span>
                 </div>
             </div>
+
+            <div class="profile-actions">
+                <button id="editProfileBtn">Edit Profile</button>
+            </div>
         </div>
 
-        <div class="my-posts-section">
+        <div class="user-posts-section">
             <h3>My Posts</h3>
-            <div id="myPostsGrid">
+            <div id="postsGrid">
                 <p class="no-posts-message" id="noPostsMessage">No posts yet.</p>
             </div>
         </div>
@@ -812,7 +785,7 @@
         </a>
         <a href="profile.html" class="nav-item active" id="profileLink">
             <div class="profile-circle" id="footerProfileCircle">
-                </div>
+            </div>
         </a>
     </div>
 
@@ -838,47 +811,35 @@
         const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
-        const storage = firebase.storage(); // Initialize Firebase Storage
-
-        // ImgBB API Key
-        const IMGBB_API_KEY = '7184e56bb0953c0545409c441c402a66'; // Make sure this is correct
+        const storage = firebase.storage();
 
         // DOM Elements
-        const profileUsername = document.getElementById('profileUsername');
+        const currentUsername = document.getElementById('currentUsername');
         const verifiedBadgePlaceholder = document.getElementById('verifiedBadgePlaceholder');
-        const menuIcon = document.getElementById('menuIcon');
-        const menuDropdown = document.getElementById('menuDropdown');
-        const logoutButton = document.getElementById('logoutButton');
-        const requestVerificationButton = document.getElementById('requestVerificationButton');
-
         const profilePictureContainer = document.getElementById('profilePictureContainer');
+        const profilePictureInput = document.getElementById('profilePictureInput');
         const profileInitials = document.getElementById('profileInitials');
         const profileImage = document.getElementById('profileImage');
-        const profilePictureOverlay = document.getElementById('profilePictureOverlay');
-        const profilePictureInput = document.getElementById('profilePictureInput');
-        const profilePictureOptions = document.getElementById('profilePictureOptions');
-        const explicitUploadPhotoButton = document.getElementById('explicitUploadPhotoButton');
-        const removePhotoButton = document.getElementById('removePhotoButton');
-        const cancelUploadButton = document.getElementById('cancelUploadButton');
-
         const bioText = document.getElementById('bioText');
-        const bioInput = document.getElementById('bioInput');
-        const bioButtons = document.getElementById('bioButtons');
-        const saveBioButton = document.getElementById('saveBioButton');
-        const cancelBioButton = document.getElementById('cancelBioButton');
-
         const postsCountSpan = document.getElementById('postsCount');
         const followersCountSpan = document.getElementById('followersCount');
         const followingCountSpan = document.getElementById('followingCount');
-        const myPostsGrid = document.getElementById('myPostsGrid');
+        const editProfileBtn = document.getElementById('editProfileBtn');
+        const postsGrid = document.getElementById('postsGrid');
         const noPostsMessage = document.getElementById('noPostsMessage');
-
+        const menuIcon = document.getElementById('menuIcon');
         const footerProfileCircle = document.getElementById('footerProfileCircle');
 
+        // NEW: Menu Elements
+        const menuOverlay = document.getElementById('menuOverlay');
+        const menuContent = document.getElementById('menuContent');
+        const closeMenuIcon = document.getElementById('closeMenuIcon');
+        const getVerifiedBtn = document.getElementById('getVerifiedBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+
         let currentUserId = null;
-        let currentUserData = null; // Store user data including profile picture URL and bio
-        let isEditingBio = false;
-        let currentOpenDropdown = null; // To track currently open post options dropdown
+        let currentUserData = null; // Store user data globally
 
         // SVG for the verified badge
         const verifiedSVG = `<svg class="verified-badge" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 256 256" xml:space="preserve">
@@ -890,121 +851,182 @@
 
         // Function to update the footer profile picture
         function updateFooterProfilePicture(profilePictureUrl, username) {
-            footerProfileCircle.innerHTML = ''; // Clear previous content
-            footerProfileCircle.classList.remove('has-image'); // Remove class initially
+            footerProfileCircle.innerHTML = '';
+            footerProfileCircle.classList.remove('has-image');
             
             if (profilePictureUrl) {
                 const img = document.createElement('img');
                 img.src = profilePictureUrl;
                 img.alt = 'Profile Picture';
                 footerProfileCircle.appendChild(img);
-                footerProfileCircle.classList.add('has-image'); // Add class to show border
+                footerProfileCircle.classList.add('has-image');
             } else {
                 const firstLetter = (username && username.length > 0) ? username.charAt(0).toUpperCase() : 'P';
                 footerProfileCircle.textContent = firstLetter;
-                footerProfileCircle.classList.remove('has-image'); // Ensure no border if no image
+                footerProfileCircle.classList.remove('has-image');
             }
         }
 
-        // --- Authentication and User Data Loading ---
-        auth.onAuthStateChanged(async (user) => {
-            if (!user) {
-                console.log('No user logged in, redirecting to login.html');
-                window.location.href = 'login.html';
-            } else {
-                currentUserId = user.uid;
-                console.log('User is logged in. User ID:', currentUserId); // Log the current user ID
 
-                // Set up real-time listener for current user's data
+        // Authentication state observer
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+
+                // Listen for real-time updates to the current user's document
                 db.collection('users').doc(currentUserId).onSnapshot(async (doc) => {
                     if (doc.exists) {
                         currentUserData = doc.data();
-                        console.log('Current user data updated:', currentUserData);
-                        displayUserProfile(); // Update UI with latest user data
-                        // Update footer profile picture here with the latest user data
+                        console.log("Current user data updated:", currentUserData); // Debugging
+                        displayUserProfile(currentUserData);
                         updateFooterProfilePicture(currentUserData.profilePictureUrl, currentUserData.username);
                     } else {
-                        console.warn("User document does not exist for UID:", currentUserId, ". Creating a basic one.");
-                        // Create a basic user document if it doesn't exist
+                        console.log("User document does not exist for ID:", currentUserId);
+                        // If user doc doesn't exist, create it with basic info
                         await db.collection('users').doc(currentUserId).set({
-                            username: user.email ? user.email.split('@')[0] : 'GuestUser', // Default username from email
-                            email: user.email || '',
-                            postsCount: 0,
-                            followersCount: 0,
-                            followingCount: 0,
+                            username: user.displayName || 'User',
+                            email: user.email,
+                            profilePictureUrl: user.photoURL || '',
                             bio: '',
                             isVerified: false,
+                            postsCount: 0,
+                            followersCount: 0, // Initialize followers count
+                            followingCount: 0, // Initialize following count
                             createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                        }, { merge: true }); // Use merge: true to avoid overwriting existing fields
-                        console.log('Created basic user document for', user.email || 'guest');
-                        // The onSnapshot will re-trigger with the new data, updating the UI
+                        }, { merge: true });
+                        console.log("New user document created.");
                     }
                 }, (error) => {
                     console.error("Error fetching user document in real-time:", error);
-                    alert("Error loading user profile. Please check console for details.");
                 });
 
-                // Set up real-time listener for current user's posts
-                db.collection('posts')
-                    .where('userId', '==', currentUserId)
-                    .orderBy('timestamp', 'desc') // Ensure 'timestamp' field exists in posts
-                    .onSnapshot((snapshot) => {
-                        console.log('--- Post Query Snapshot Received ---');
-                        console.log('Number of documents in snapshot:', snapshot.docs.length);
-                        loadUserPosts(snapshot);
-                    }, (error) => {
-                        console.error("Error loading user posts in real-time:", error);
-                        alert("Error loading user posts. Please check console for details.");
-                    });
+                listenForUserPostCount(); // Start listening for post count changes
+                loadUserPosts(); // Initial load of posts
+            } else {
+                console.log('No user logged in, redirecting to index.html');
+                window.location.href = 'index.html';
             }
         });
 
-        async function displayUserProfile() {
-            if (!currentUserData) {
-                console.log("No current user data to display profile.");
-                return;
-            }
+        // --- NEW: Function to listen for real-time post count updates ---
+        async function listenForUserPostCount() {
+            if (!currentUserId) return;
 
-            profileUsername.textContent = currentUserData.username || 'User';
-            if (currentUserData.isVerified) {
+            // This approach is more complex than a single count query because Firestore
+            // doesn't have a direct "OR" query across different fields for counting.
+            // We need to fetch both sets and then deduplicate to get the total count.
+            // This is efficient enough for count updates as it's not rebuilding the UI.
+
+            // Listen to posts where currentUserId is the author
+            db.collection('posts')
+                .where('userId', '==', currentUserId)
+                .onSnapshot(async (authorSnapshot) => {
+                    const authorPostIds = new Set(authorSnapshot.docs.map(doc => doc.id));
+
+                    // Listen to posts where currentUserId is a collaborator
+                    db.collection('posts')
+                        .where('collaborators', 'array-contains', currentUserId)
+                        .onSnapshot((collaboratorSnapshot) => {
+                            let totalCount = authorPostIds.size;
+                            collaboratorSnapshot.docs.forEach(doc => {
+                                if (!authorPostIds.has(doc.id)) { // Add if not already counted as an author post
+                                    totalCount++;
+                                }
+                            });
+                            postsCountSpan.textContent = totalCount;
+                            
+                            // Also ensure the "No posts yet." message is updated correctly
+                            if (totalCount === 0) {
+                                noPostsMessage.style.display = 'block';
+                                if (!postsGrid.contains(noPostsMessage)) { // Ensure it's only appended once
+                                    postsGrid.appendChild(noPostsMessage);
+                                }
+                            } else {
+                                noPostsMessage.style.display = 'none';
+                            }
+                        }, (error) => {
+                            console.error("Error listening for collaborator post count:", error);
+                        });
+                }, (error) => {
+                    console.error("Error listening for author post count:", error);
+                });
+        }
+        // --- END NEW FUNCTION ---
+
+
+        // Display user profile data
+        function displayUserProfile(userData) {
+            currentUsername.textContent = userData.username || 'User';
+            if (userData.isVerified) {
                 verifiedBadgePlaceholder.innerHTML = verifiedSVG;
             } else {
                 verifiedBadgePlaceholder.innerHTML = '';
             }
 
             // Profile Picture
-            if (currentUserData.profilePictureUrl) {
-                profileImage.src = currentUserData.profilePictureUrl;
+            if (userData.profilePictureUrl) {
+                profileImage.src = userData.profilePictureUrl;
                 profileImage.style.display = 'block';
                 profileInitials.style.display = 'none';
-                removePhotoButton.style.display = 'block'; // Show remove button if pic exists
             } else {
                 profileImage.style.display = 'none';
-                profileInitials.style.display = 'flex'; // Use flex for centering initials
-                profileInitials.textContent = (currentUserData.username && currentUserData.username.length > 0) ? currentUserData.username.charAt(0).toUpperCase() : 'P';
-                removePhotoButton.style.display = 'none'; // Hide remove button if no pic
+                profileInitials.style.display = 'flex';
+                profileInitials.textContent = (userData.username && userData.username.length > 0) ? userData.username.charAt(0).toUpperCase() : 'P';
             }
 
             // Bio
-            const bioContent = currentUserData.bio || '';
-            bioText.textContent = bioContent || 'Add your bio here...'; // Display actual bio or placeholder
+            const bioContent = userData.bio || '';
+            bioText.textContent = bioContent || 'No bio yet. Tap "Edit Profile" to add one.';
             if (bioContent === '') {
-                bioText.style.color = '#8e8e8e'; // Dim placeholder text
+                bioText.style.color = '#8e8e8e';
             } else {
                 bioText.style.color = '#f5f5f5';
             }
-            bioInput.value = bioContent;
 
-            // Counts
-            postsCountSpan.textContent = currentUserData.postsCount || 0;
-            followersCountSpan.textContent = currentUserData.followersCount || 0;
-            followingCountSpan.textContent = currentUserData.followingCount || 0;
+            // Counts (Now updated in real-time by onSnapshot for entire doc)
+            followersCountSpan.textContent = userData.followersCount || 0;
+            followingCountSpan.textContent = userData.followingCount || 0;
+            // postsCountSpan.textContent is handled by listenForUserPostCount
         }
+
+        // Handle profile picture upload
+        profilePictureContainer.addEventListener('click', () => {
+            profilePictureInput.click();
+        });
+
+        profilePictureInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!currentUserId) {
+                alert('You must be logged in to upload a profile picture.');
+                return;
+            }
+
+            const storageRef = storage.ref(`profile_pictures/${currentUserId}/${file.name}`);
+            try {
+                const snapshot = await storageRef.put(file);
+                const downloadURL = await snapshot.ref.getDownloadURL();
+
+                await db.collection('users').doc(currentUserId).update({
+                    profilePictureUrl: downloadURL
+                });
+                alert('Profile picture updated successfully!');
+            } catch (error) {
+                console.error("Error uploading profile picture:", error);
+                alert("Failed to upload profile picture.");
+            }
+        });
+
+        // Redirect to edit profile page
+        editProfileBtn.addEventListener('click', () => {
+            window.location.href = 'edit_profile.html';
+        });
 
         // Helper to format Firestore Timestamps
         function formatTimestamp(timestamp) {
             if (!timestamp || !timestamp.toDate) {
-                return 'N/A'; // Handle invalid timestamp gracefully
+                return 'N/A';
             }
             const date = timestamp.toDate();
             const now = new Date();
@@ -1019,129 +1041,204 @@
             if (diffHrs < 24) return `${diffHrs}h ago`;
             if (diffDays < 7) return `${diffDays}d ago`;
             if (diffDays < 30) return `${Math.round(diffDays / 7)}w ago`;
-            // Fallback for older posts
             return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         }
 
+        // Load posts by the current user and where they are a collaborator
+        async function loadUserPosts() {
+            if (!currentUserId) return;
 
-        // Updated loadUserPosts to create full post cards and calculate total likes
-        async function loadUserPosts(querySnapshot) {
-            myPostsGrid.innerHTML = ''; // Clear previous posts
-            noPostsMessage.style.display = 'none'; // Hide default message
+            postsGrid.innerHTML = ''; // Clear existing posts
 
-            let currentPostsCount = 0; // To accurately count posts displayed
+            // 1. Fetch posts where current user is the primary author
+            const authorPostsSnapshot = await db.collection('posts')
+                .where('userId', '==', currentUserId)
+                .orderBy('timestamp', 'desc')
+                .get();
 
-            if (querySnapshot.empty) {
-                console.log('Query snapshot is empty. Showing "No posts yet" message.');
-                noPostsMessage.style.display = 'block';
-                if (!myPostsGrid.contains(noPostsMessage)) {
-                    myPostsGrid.appendChild(noPostsMessage);
+            // 2. Fetch posts where current user is a collaborator
+            const collaboratorPostsSnapshot = await db.collection('posts')
+                .where('collaborators', 'array-contains', currentUserId)
+                .orderBy('timestamp', 'desc')
+                .get();
+
+            // Combine and deduplicate posts
+            const combinedPosts = new Map(); // Use a Map to store unique posts by ID
+
+            authorPostsSnapshot.docs.forEach(doc => {
+                combinedPosts.set(doc.id, { id: doc.id, ...doc.data() });
+            });
+
+            collaboratorPostsSnapshot.docs.forEach(doc => {
+                // Only add if not already present (i.e., not an author post already)
+                if (!combinedPosts.has(doc.id)) {
+                    combinedPosts.set(doc.id, { id: doc.id, ...doc.data() });
                 }
-                postsCountSpan.textContent = 0; // Ensure count is 0 if no posts are found by the query
+            });
+
+            // Convert map values to an array and sort by timestamp (descending)
+            const sortedPosts = Array.from(combinedPosts.values()).sort((a, b) => {
+                const timestampA = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate().getTime() : 0;
+                const timestampB = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate().getTime() : 0;
+                return timestampB - timestampA;
+            });
+
+            if (sortedPosts.length === 0) {
+                // Visibility of noPostsMessage is now handled by listenForUserPostCount
                 return;
             }
 
-            const postPromises = querySnapshot.docs.map(async doc => {
-                const post = doc.data();
-                const postId = doc.id;
-                console.log('Processing post:', postId, post);
-
-                // Increment posts count
-                currentPostsCount++;
-
-                // Fetch the user's current profile data for this post's display
-                let postAuthorUsername = post.username || 'Unknown User';
-                let postAuthorProfilePicUrl = '';
-                let postAuthorIsVerified = false;
-
-                // Only fetch author data if userId is available in the post document
-                if (post.userId) {
-                    try {
-                        const authorDoc = await db.collection('users').doc(post.userId).get();
-                        if (authorDoc.exists) {
-                            const authorData = authorDoc.data();
-                            postAuthorUsername = authorData.username || postAuthorUsername;
-                            postAuthorProfilePicUrl = authorData.profilePictureUrl || '';
-                            postAuthorIsVerified = authorData.isVerified || false;
-                        } else {
-                            console.warn(`Author document for userId ${post.userId} not found for post ${postId}`);
-                        }
-                    } catch (error) {
-                        console.error('Error fetching author data for post', postId, error);
-                    }
-                }
-
+            const postPromises = sortedPosts.map(async post => {
+                const postId = post.id;
                 const postCard = document.createElement('div');
                 postCard.classList.add('post-card');
-                postCard.setAttribute('data-post-id', postId); // Store postId on the card
+                postCard.setAttribute('data-post-id', postId);
 
                 const formattedTime = formatTimestamp(post.timestamp);
-
-                // Get actual like and comment counts (from 'likes' field for likes, will need comments subcollection if you have one)
                 const numLikes = post.likes || 0;
-                // For comments, you would typically query a subcollection or have a commentsCount field on the post.
-                // For now, let's assume 0 if you haven't implemented it fully.
-                const numComments = 0; // Placeholder. If you have a 'commentsCount' field on post, use that.
-                // To get actual comments count, you'd need:
-                // const commentsSnapshot = await db.collection('posts').doc(postId).collection('comments').get();
-                // const numComments = commentsSnapshot.size;
-
                 const likedBy = post.likedBy || [];
                 const hasLiked = likedBy.includes(currentUserId);
 
+                // Determine display username and profile pic for the post header
+                let displayUsername = currentUserData.username;
+                let displayProfilePicUrl = currentUserData.profilePictureUrl;
+                let displayIsVerified = currentUserData.isVerified;
+
+                let collabText = '';
+
+                if (post.collaborators && post.collaborators.length > 0) {
+                    // Filter out the current user (if they are the author or a collaborator)
+                    const otherCollaboratorIds = post.collaborators.filter(id => id !== currentUserId);
+
+                    if (post.userId === currentUserId) { // Current user is the author
+                        if (otherCollaboratorIds.length > 0) {
+                            const collaboratorUsernames = [];
+                            for (const collabId of otherCollaboratorIds) {
+                                const collabUserDoc = await db.collection('users').doc(collabId).get();
+                                if (collabUserDoc.exists) {
+                                    collaboratorUsernames.push(collabUserDoc.data().username);
+                                }
+                            }
+                            if (collaboratorUsernames.length > 0) {
+                                collabText = `<span class="collab-text"> &bull; with ${collaboratorUsernames.join(', ')}</span>`;
+                            }
+                        }
+                    } else if (post.collaborators.includes(currentUserId)) { // Current user is a collaborator, but not the author
+                        const mainAuthorDoc = await db.collection('users').doc(post.userId).get();
+                        if (mainAuthorDoc.exists) {
+                            const mainAuthorData = mainAuthorDoc.data();
+                            displayUsername = mainAuthorData.username || 'Unknown User';
+                            displayProfilePicUrl = mainAuthorData.profilePictureUrl || '';
+                            displayIsVerified = mainAuthorData.isVerified || false;
+                        }
+
+                        collabText = `<span class="collab-text"> &bull; with you`;
+                        if (otherCollaboratorIds.length > 0) {
+                             const collaboratorUsernames = [];
+                            for (const collabId of otherCollaboratorIds) {
+                                const collabUserDoc = await db.collection('users').doc(collabId).get();
+                                if (collabUserDoc.exists) {
+                                    collaboratorUsernames.push(collabUserDoc.data().username);
+                                }
+                            }
+                            if (collaboratorUsernames.length > 0) {
+                                collabText += `, ${collaboratorUsernames.join(', ')}`;
+                            }
+                        }
+                        collabText += `</span>`;
+                    }
+                }
 
                 postCard.innerHTML = `
                     <div class="post-header">
                         <div class="profile-pic">
-                            ${postAuthorProfilePicUrl ? `<img src="${postAuthorProfilePicUrl}" alt="${postAuthorUsername}'s profile pic">` : `<span class="initials">${postAuthorUsername.charAt(0).toUpperCase()}</span>`}
+                            ${displayProfilePicUrl ? `<img src="${displayProfilePicUrl}" alt="${displayUsername}'s profile pic">` : `<span class="initials">${displayUsername.charAt(0).toUpperCase()}</span>`}
                         </div>
                         <span class="username">
-                            ${postAuthorUsername}
-                            ${postAuthorIsVerified ? verifiedSVG : ''}
+                            ${displayUsername}
+                            ${displayIsVerified ? verifiedSVG : ''}
+                            ${collabText}
                         </span>
-                        <div class="post-options" data-post-id="${postId}" data-image-url="${post.imageUrl}">
+                        <div class="post-options" data-postid="${postId}">
                             <i class="fas fa-ellipsis-h"></i>
-                            <div class="post-options-dropdown" id="dropdown-${postId}" onclick="event.stopPropagation()">
-                                <button class="edit-btn">Edit Post</button>
-                                <button class="delete-btn">Delete Post</button>
+                            <div class="post-options-menu">
+                                <button class="delete" data-postid="${postId}">Delete</button>
                             </div>
                         </div>
                     </div>
                     <img src="${post.imageUrl}" alt="Post Image" class="post-image">
-                    <div class="post-caption">
-                        ${post.caption}
-                    </div>
                     <div class="post-actions">
                         <i class="${hasLiked ? 'fas' : 'far'} fa-heart action-icon ${hasLiked ? 'liked' : ''}" data-postid="${postId}"></i>
                         <i class="far fa-comment action-icon" data-postid="${postId}"></i>
                     </div>
                     <div class="post-likes-comments">
                         <span class="likes-count">${numLikes} likes</span>
-                        <span class="comments-count">${numComments} comments</span>
+                    </div>
+                    <div class="post-caption">
+                        <span class="caption-username">
+                            ${displayUsername}
+                            ${displayIsVerified ? verifiedSVG : ''}
+                        </span>
+                        <span class="caption-text">${post.caption}</span>
                     </div>
                     <div class="post-timestamp">${formattedTime}</div>
                 `;
                 return postCard;
             });
 
-            // Wait for all post cards to be created, then append them
-            const postCards = await Promise.all(postPromises);
+            const postCards = await Promise.all(postPromises); // Wait for all post cards to be built
             postCards.forEach(card => {
-                myPostsGrid.appendChild(card);
+                postsGrid.appendChild(card);
+
                 // Add click listener to the entire post card for single post view
                 card.addEventListener('click', (event) => {
-                    // Prevent click from triggering if the event originated from the options menu or other interactive elements
-                    if (!event.target.closest('.post-options') &&
-                        !event.target.closest('.action-icon')) { // NEW: Prevent if clicking on icons
+                    // Prevent propagation if a button/icon inside the card was clicked
+                    if (!event.target.closest('.action-icon') && !event.target.closest('.post-options')) {
                         viewSinglePost(card.getAttribute('data-post-id'));
                     }
                 });
+
+                // Event listener for post options (three dots menu)
+                const postOptions = card.querySelector('.post-options');
+                const postOptionsMenu = card.querySelector('.post-options-menu');
+                if (postOptions && postOptionsMenu) {
+                    postOptions.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent card click
+                        // Close other open menus
+                        document.querySelectorAll('.post-options-menu').forEach(menu => {
+                            if (menu !== postOptionsMenu) {
+                                menu.style.display = 'none';
+                            }
+                        });
+                        postOptionsMenu.style.display = postOptionsMenu.style.display === 'block' ? 'none' : 'block';
+                    });
+
+                    // Close menu when clicking outside
+                    document.addEventListener('click', (event) => {
+                        if (!postOptions.contains(event.target) && !postOptionsMenu.contains(event.target)) {
+                            postOptionsMenu.style.display = 'none';
+                        }
+                    });
+                }
+
+                // Event listener for delete button
+                const deleteButton = card.querySelector('.post-options-menu .delete');
+                if (deleteButton) {
+                    deleteButton.addEventListener('click', async (event) => {
+                        event.stopPropagation(); // Prevent options menu from closing immediately
+                        const postIdToDelete = deleteButton.dataset.postid;
+                        if (confirm('Are you sure you want to delete this post?')) {
+                            await deletePost(postIdToDelete);
+                            postOptionsMenu.style.display = 'none'; // Hide menu after action
+                        }
+                    });
+                }
 
                 // Add event listener for the comment icon specifically
                 const commentIcon = card.querySelector('.post-actions .fa-comment');
                 if (commentIcon) {
                     commentIcon.addEventListener('click', (event) => {
-                        event.stopPropagation(); // Stop propagation to prevent post card click
+                        event.stopPropagation();
                         const postId = commentIcon.dataset.postid;
                         window.location.href = `comments.html?postId=${postId}`;
                     });
@@ -1151,7 +1248,7 @@
                 const likeIcon = card.querySelector('.post-actions .fa-heart');
                 if (likeIcon) {
                     likeIcon.addEventListener('click', async (event) => {
-                        event.stopPropagation(); // Stop propagation to prevent post card click
+                        event.stopPropagation();
                         const postId = likeIcon.dataset.postid;
                         const postRef = db.collection('posts').doc(postId);
                         const currentLikesSpan = card.querySelector('.likes-count');
@@ -1178,329 +1275,167 @@
                                 likeIcon.classList.add('liked', 'fas');
                                 likeIcon.classList.remove('far');
                                 console.log(`Post ${postId} liked!`);
+
+                                // Add notification for the post owner
+                                const postOwnerId = post.userId; 
+                                if (currentUserId !== postOwnerId) { 
+                                    await db.collection('notifications').add({
+                                        type: 'like',
+                                        actorUserId: currentUserId,
+                                        targetUserId: postOwnerId, 
+                                        postId: postId, 
+                                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                        read: false
+                                    });
+                                }
                             }
                             currentLikesSpan.textContent = `${currentLikes} likes`;
                         } catch (error) {
-                            console.error("Error updating like on profile:", error);
+                            console.error("Error updating like:", error);
                         }
                     });
                 }
             });
-
-            // Attach event listeners for the new kebab menus
-            document.querySelectorAll('.post-options').forEach(optionIcon => {
-                optionIcon.addEventListener('click', (event) => {
-                    const postId = optionIcon.getAttribute('data-post-id');
-                    const imageUrl = optionIcon.getAttribute('data-image-url'); // Note: imageUrl is not strictly needed for delete from Firestore or edit
-                    openPostOptions(postId, imageUrl, optionIcon.querySelector('.post-options-dropdown'));
-                    event.stopPropagation(); // Prevent document click from closing it immediately
-                });
-            });
-
-            // Update counts after all posts are processed
-            postsCountSpan.textContent = currentPostsCount;
-            console.log('Finished loading posts. Total displayed:', currentPostsCount);
+            // postsCountSpan.textContent is handled by listenForUserPostCount
         }
 
-        // --- NEW FUNCTION: View Single Post ---
+
+        // Function to delete a post
+        async function deletePost(postId) {
+            if (!currentUserId) {
+                alert('You must be logged in to delete posts.');
+                return;
+            }
+
+            try {
+                const postRef = db.collection('posts').doc(postId);
+                const postDoc = await postRef.get();
+
+                if (!postDoc.exists) {
+                    alert('Post not found.');
+                    return;
+                }
+
+                const postData = postDoc.data();
+                if (postData.userId !== currentUserId) {
+                    alert('You can only delete your own posts.');
+                    return;
+                }
+
+                // Delete image from storage
+                if (postData.imageUrl) {
+                    const imageRef = storage.refFromURL(postData.imageUrl);
+                    await imageRef.delete();
+                    console.log('Post image deleted from storage.');
+                }
+
+                // Delete post document from Firestore
+                await postRef.delete();
+                console.log('Post deleted from Firestore.');
+
+                // Decrement post count for the user (handled by listenForUserPostCount now)
+                // await db.collection('users').doc(currentUserId).update({
+                //     postsCount: firebase.firestore.FieldValue.increment(-1)
+                // });
+
+                alert('Post deleted successfully!');
+                // Reload posts to update the grid
+                loadUserPosts(); // Reload all posts after deletion
+            } catch (error) {
+                console.error("Error deleting post:", error);
+                alert("Failed to delete post.");
+            }
+        }
+
+        // View single post function
         function viewSinglePost(postId) {
-            // Redirect to home.html with the postId as a query parameter
+            // Redirect to home.html with a query parameter for the specific post
             window.location.href = `home.html?postId=${postId}`;
         }
 
-        // --- Post Options (Kebab Menu) Logic ---
-        function openPostOptions(postId, imageUrl, dropdownElement) {
-            // Close any currently open dropdown
-            if (currentOpenDropdown && currentOpenDropdown !== dropdownElement) {
-                currentOpenDropdown.classList.remove('show');
-            }
 
-            dropdownElement.classList.toggle('show');
-            currentOpenDropdown = dropdownElement.classList.contains('show') ? dropdownElement : null;
+        // Initial setup for the footer profile circle
+        updateFooterProfilePicture(null, 'P');
+        
+        // Footer navigation logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const navItems = document.querySelectorAll('.footer .nav-item');
+            const homeLink = document.getElementById('homeLink');
+            const searchLink = document.getElementById('searchLink');
+            const createPostLink = document.getElementById('createPostLink');
+            const notificationsLink = document.getElementById('notificationsLink');
+            const profileLink = document.getElementById('profileLink');
 
-            // Attach event listeners for buttons inside this specific dropdown
-            dropdownElement.querySelector('.edit-btn').onclick = () => editPost(postId, dropdownElement);
-            dropdownElement.querySelector('.delete-btn').onclick = () => deletePost(postId, imageUrl, dropdownElement);
-        }
-
-        // Close dropdown if clicked outside
-        document.addEventListener('click', (event) => {
-            if (currentOpenDropdown && !currentOpenDropdown.contains(event.target) && !event.target.closest('.post-options')) {
-                currentOpenDropdown.classList.remove('show');
-                currentOpenDropdown = null;
-            }
-        });
-
-        async function deletePost(postId, imageUrl, dropdownElement) {
-            if (!currentUserId) {
-                alert('User not authenticated.');
-                return;
-            }
-
-            if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
-                return;
-            }
-
-            dropdownElement.classList.remove('show'); // Close dropdown immediately
-            currentOpenDropdown = null;
-
-            try {
-                // Delete image from Firebase Storage if it was stored there
-                // This assumes imageUrl is a Firebase Storage URL. If it's ImgBB, this won't apply directly.
-                // For ImgBB, you typically can't delete programmatically without their admin panel.
-                if (imageUrl && imageUrl.includes('firebasestorage.googleapis.com')) {
-                    const imageRef = storage.refFromURL(imageUrl);
-                    await imageRef.delete();
-                    console.log('Image deleted from Firebase Storage:', imageUrl);
-                } else if (imageUrl && imageUrl.includes('i.ibb.co')) {
-                     console.log('Image is from ImgBB. Cannot delete programmatically via Firebase Storage.');
-                    // You might want to handle ImgBB deletion separately if their API supports it
-                    // but it's usually not feasible without a specific deletion hash from the upload.
-                }
-
-                // Delete from Firestore
-                await db.collection('posts').doc(postId).delete();
-                console.log('Post deleted from Firestore:', postId);
-
-                // Decrement postsCount in user's document
-                if (currentUserId) {
-                    await db.collection('users').doc(currentUserId).update({
-                        postsCount: firebase.firestore.FieldValue.increment(-1)
-                    });
-                    console.log('User postsCount decremented.');
-                }
-
-                alert('Post deleted successfully!');
-                // UI will automatically update due to real-time listener
-            } catch (error) {
-                console.error("Error deleting post:", error);
-                alert('Failed to delete post. Please try again.');
-            }
-        }
-
-        async function editPost(postId, dropdownElement) {
-            if (!currentUserId) {
-                alert('User not authenticated.');
-                return;
-            }
-
-            dropdownElement.classList.remove('show'); // Close dropdown
-            currentOpenDropdown = null;
-
-            const postRef = db.collection('posts').doc(postId);
-            try {
-                const doc = await postRef.get();
-                if (doc.exists) {
-                    const currentCaption = doc.data().caption || '';
-                    const newCaption = prompt('Edit your caption:', currentCaption);
-
-                    if (newCaption !== null && newCaption.trim() !== currentCaption.trim()) {
-                        await postRef.update({ caption: newCaption.trim() });
-                        console.log('Post caption updated:', postId);
-                        alert('Caption updated successfully!');
-                        // UI will automatically update due to real-time listener
-                    } else if (newCaption === null) {
-                        console.log('Caption edit cancelled.');
-                    } else {
-                        console.log('Caption not changed.');
+            function setActiveLink(clickedLink) {
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                    const profileCircle = item.querySelector('.profile-circle');
+                    if (profileCircle) {
+                        profileCircle.style.borderColor = 'transparent';
                     }
-                } else {
-                    console.error('Post not found for editing:', postId);
-                    alert('Post not found.');
-                }
-            } catch (error) {
-                console.error("Error editing post:", error);
-                alert('Failed to edit post. Please try again.');
-            }
-        }
-
-        // --- Header Menu Logic ---
-        menuIcon.addEventListener('click', (event) => {
-            menuDropdown.classList.toggle('show');
-            event.stopPropagation(); // Prevent click from closing immediately
-        });
-
-        document.addEventListener('click', (event) => {
-            if (!menuDropdown.contains(event.target) && !menuIcon.contains(event.target)) {
-                menuDropdown.classList.remove('show');
-            }
-        });
-
-        logoutButton.addEventListener('click', async () => {
-            try {
-                await auth.signOut();
-                window.location.href = 'login.html';
-            } catch (error) {
-                console.error("Error logging out:", error);
-                alert("Logout failed. Please try again.");
-            }
-        });
-
-        requestVerificationButton.addEventListener('click', () => {
-            window.location.href = 'verification.html'; // Navigate to verification page
-        });
-
-        // --- Profile Picture Logic ---
-        profilePictureOverlay.addEventListener('click', (event) => {
-            profilePictureOptions.classList.remove('show'); // Close options if open
-            profilePictureInput.click();
-            event.stopPropagation();
-        });
-
-        explicitUploadPhotoButton.addEventListener('click', () => {
-            profilePictureInput.click();
-            profilePictureOptions.classList.remove('show');
-        });
-
-        // Open options dropdown on right-click for more actions (like remove)
-        profilePictureContainer.addEventListener('contextmenu', (event) => {
-            event.preventDefault(); // Prevent default right-click menu
-            profilePictureOptions.classList.toggle('show');
-            // Position the dropdown near the profile picture container
-            const rect = profilePictureContainer.getBoundingClientRect();
-            profilePictureOptions.style.top = `${rect.bottom + 10}px`;
-            profilePictureOptions.style.left = `${rect.left + rect.width / 2}px`;
-            profilePictureOptions.style.transform = 'translateX(-50%)'; // Center it
-            event.stopPropagation();
-        });
-
-        // Close options if clicked outside
-        document.addEventListener('click', (event) => {
-            if (!profilePictureOptions.contains(event.target) && !profilePictureContainer.contains(event.target)) {
-                profilePictureOptions.classList.remove('show');
-            }
-        });
-
-        removePhotoButton.addEventListener('click', async () => {
-            if (!currentUserId) return;
-            if (!confirm('Are you sure you want to remove your profile picture?')) return;
-
-            try {
-                // Remove from Firestore
-                await db.collection('users').doc(currentUserId).update({
-                    profilePictureUrl: firebase.firestore.FieldValue.delete()
                 });
-                console.log('Profile picture URL removed from Firestore.');
-
-                // If the image was stored in Firebase Storage, delete it from there too
-                if (currentUserData && currentUserData.profilePictureUrl && currentUserData.profilePictureUrl.includes('firebasestorage.googleapis.com')) {
-                    try {
-                        const imageRef = storage.refFromURL(currentUserData.profilePictureUrl);
-                        await imageRef.delete();
-                        console.log('Profile picture deleted from Firebase Storage.');
-                    } catch (storageError) {
-                        console.warn('Could not delete profile picture from Storage (might not exist or is ImgBB):', storageError);
-                    }
-                } else if (currentUserData && currentUserData.profilePictureUrl && currentUserData.profilePictureUrl.includes('i.ibb.co')) {
-                     console.log('Profile picture is from ImgBB, cannot delete directly from Firebase Storage.');
+                clickedLink.classList.add('active');
+                const profileCircle = clickedLink.querySelector('.profile-circle');
+                if (profileCircle && profileCircle.classList.contains('has-image')) {
+                    profileCircle.style.borderColor = '#0095f6';
+                } else if (profileCircle) {
+                    profileCircle.style.borderColor = 'transparent';
                 }
-
-                alert('Profile picture removed successfully!');
-                // UI will automatically update due to real-time listener via onSnapshot
-            } catch (error) {
-                console.error("Error removing profile picture:", error);
-                alert('Failed to remove profile picture. Please try again.');
-            }
-            profilePictureOptions.classList.remove('show');
-        });
-
-        cancelUploadButton.addEventListener('click', () => {
-            profilePictureOptions.classList.remove('show');
-        });
-
-        profilePictureInput.addEventListener('change', async (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                alert('File size exceeds 5MB limit.');
-                return;
             }
 
-            profilePictureOverlay.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Uploading...</span>';
-            profilePictureOverlay.style.opacity = 1;
-            profilePictureOverlay.style.cursor = 'wait';
+            const currentPath = window.location.pathname.split('/').pop();
+            if (currentPath === 'home.html') {
+                setActiveLink(homeLink);
+            } else if (currentPath === 'search.html') {
+                setActiveLink(searchLink);
+            } else if (currentPath === 'create.html') {
+                setActiveLink(createPostLink);
+            } else if (currentPath === 'notifications.html') {
+                setActiveLink(notificationsLink);
+            } else if (currentPath === 'profile.html') {
+                setActiveLink(profileLink);
+            }
 
-            const formData = new FormData();
-            formData.append('image', file);
-
-            try {
-                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-                    method: 'POST',
-                    body: formData,
+            navItems.forEach(item => {
+                item.addEventListener('click', function(event) {
+                    // if (this.getAttribute('href') === '#' || this.classList.contains('active')) {
+                    //     event.preventDefault(); 
+                    // }
+                    setActiveLink(this);
                 });
-                const data = await response.json();
+            });
 
-                if (data.success) {
-                    const imageUrl = data.data.url;
-                    console.log('Uploaded to ImgBB:', imageUrl);
+            // NEW: Menu event listeners
+            menuIcon.addEventListener('click', () => {
+                menuOverlay.classList.add('active');
+            });
 
-                    // Update user's profilePictureUrl in Firestore
-                    await db.collection('users').doc(currentUserId).update({
-                        profilePictureUrl: imageUrl
-                    });
-                    console.log('Profile picture URL updated in Firestore.');
-                    alert('Profile picture uploaded successfully!');
-                } else {
-                    console.error('ImgBB upload failed:', data.error.message);
-                    alert('Failed to upload image: ' + data.error.message);
+            closeMenuIcon.addEventListener('click', () => {
+                menuOverlay.classList.remove('active');
+            });
+
+            menuOverlay.addEventListener('click', (event) => {
+                if (event.target === menuOverlay) { // Only close if clicked on the overlay itself, not the menu content
+                    menuOverlay.classList.remove('active');
                 }
-            } catch (error) {
-                console.error('Error uploading image:', error);
-                alert('An error occurred during image upload.');
-            } finally {
-                profilePictureInput.value = ''; // Clear the input so same file can be selected again
-                profilePictureOverlay.innerHTML = '<i class="fas fa-camera"></i><span>Change Photo</span>';
-                profilePictureOverlay.style.opacity = 0;
-                profilePictureOverlay.style.cursor = 'pointer';
-            }
-        });
+            });
 
-        // --- Bio Edit Logic ---
-        bioText.addEventListener('click', () => {
-            if (isEditingBio) return;
-            isEditingBio = true;
-            bioText.style.display = 'none';
-            bioInput.style.display = 'block';
-            bioButtons.style.display = 'flex';
-            bioInput.focus();
-        });
+            getVerifiedBtn.addEventListener('click', () => {
+                window.location.href = 'verification.html';
+                menuOverlay.classList.remove('active'); // Close menu after redirect
+            });
 
-        saveBioButton.addEventListener('click', async () => {
-            if (!currentUserId) return;
-            const newBio = bioInput.value.trim();
-
-            if (newBio === (currentUserData.bio || '')) {
-                console.log('Bio not changed.');
-                // Just exit edit mode if nothing changed
-            } else {
+            logoutBtn.addEventListener('click', async () => {
                 try {
-                    await db.collection('users').doc(currentUserId).update({ bio: newBio });
-                    console.log('Bio updated successfully!');
-                    alert('Bio updated!');
+                    await auth.signOut();
+                    alert('Logged out successfully!');
+                    window.location.href = 'index.html'; // Redirect to login page after logout
                 } catch (error) {
-                    console.error('Error updating bio:', error);
-                    alert('Failed to update bio. Please try again.');
+                    console.error("Error logging out:", error);
+                    alert("Failed to log out.");
                 }
-            }
-            // Exit edit mode
-            isEditingBio = false;
-            bioText.style.display = 'block';
-            bioInput.style.display = 'none';
-            bioButtons.style.display = 'none';
+            });
         });
-
-        cancelBioButton.addEventListener('click', () => {
-            bioInput.value = currentUserData.bio || ''; // Revert to original bio
-            isEditingBio = false;
-            bioText.style.display = 'block';
-            bioInput.style.display = 'none';
-            bioButtons.style.display = 'none';
-        });
-
-        // Initial setup for the footer profile circle to ensure it's there on first load
-        // This will be overridden by the onAuthStateChanged listener, but provides a fallback.
-        updateFooterProfilePicture(null, 'P'); // Display 'P' initially
     </script>
 </body>
 </html>
