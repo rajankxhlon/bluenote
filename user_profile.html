@@ -725,17 +725,6 @@
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
         }
 
-        // --- NEW FUNCTION: Format numbers like 1k, 10k, 1M ---
-        function formatNumber(num) {
-            if (num >= 1000000) {
-                return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-            }
-            if (num >= 1000) {
-                return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-            }
-            return num;
-        }
-
         // --- Authentication and Data Loading ---
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
@@ -789,9 +778,9 @@
                     console.error("Target user document does not exist for UID:", targetUserId);
                     userProfileUsername.textContent = 'User Not Found';
                     userBioText.textContent = 'This profile does not exist.';
-                    userPostsCountSpan.textContent = formatNumber(0); // Use formatNumber
-                    userFollowersCountSpan.textContent = formatNumber(0); // Use formatNumber
-                    userFollowingCountSpan.textContent = formatNumber(0); // Use formatNumber
+                    userPostsCountSpan.textContent = 0;
+                    userFollowersCountSpan.textContent = 0;
+                    userFollowingCountSpan.textContent = 0;
                     userPostsGrid.innerHTML = '<p class="no-posts-message">User not found.</p>';
                 }
             }, (error) => {
@@ -810,26 +799,28 @@
             // We need to fetch both sets and then deduplicate to get the total count.
             // This is efficient enough for count updates as it's not rebuilding the UI.
 
+            // Listen to posts where targetUserId is the author
             db.collection('posts')
                 .where('userId', '==', targetUserId)
                 .onSnapshot(async (authorSnapshot) => {
                     const authorPostIds = new Set(authorSnapshot.docs.map(doc => doc.id));
 
+                    // Listen to posts where targetUserId is a collaborator
                     db.collection('posts')
                         .where('collaborators', 'array-contains', targetUserId)
                         .onSnapshot((collaboratorSnapshot) => {
                             let totalCount = authorPostIds.size;
                             collaboratorSnapshot.docs.forEach(doc => {
-                                if (!authorPostIds.has(doc.id)) {
+                                if (!authorPostIds.has(doc.id)) { // Add if not already counted as an author post
                                     totalCount++;
                                 }
                             });
-                            userPostsCountSpan.textContent = formatNumber(totalCount); // Use formatNumber
+                            userPostsCountSpan.textContent = totalCount;
                             
                             // Also ensure the "No posts yet." message is updated correctly
                             if (totalCount === 0) {
                                 noPostsMessage.style.display = 'block';
-                                if (!userPostsGrid.contains(noPostsMessage)) {
+                                if (!userPostsGrid.contains(noPostsMessage)) { // Ensure it's only appended once
                                     userPostsGrid.appendChild(noPostsMessage);
                                 }
                             } else {
@@ -883,7 +874,6 @@
             });
 
             // Pass a fabricated snapshot-like object to loadUserPosts
-            // Note: The post count is now handled by listenForTargetUserPostCount()
             loadUserPosts({
                 empty: sortedPosts.length === 0,
                 docs: sortedPosts.map(post => ({ id: post.id, data: () => post }))
@@ -925,8 +915,8 @@
             }
 
             // Counts - Posts count will be updated by listenForTargetUserPostCount()
-            userFollowersCountSpan.textContent = formatNumber(targetUserData.followersCount || 0); // Use formatNumber
-            userFollowingCountSpan.textContent = formatNumber(targetUserData.followingCount || 0); // Use formatNumber
+            userFollowersCountSpan.textContent = targetUserData.followersCount || 0;
+            userFollowingCountSpan.textContent = targetUserData.followingCount || 0;
         }
 
         function displayProfileActions() {
@@ -957,29 +947,29 @@
             const followButton = document.getElementById('followButton');
 
             try {
-                const isFollowing = currentUserData.following && currentUserData.following.includes(targetUserId);
-                let currentFollowersCount = targetUserData.followersCount || 0; // Use actual number for logic
+                const isCurrentlyFollowing = currentUserData.following && currentUserData.following.includes(targetUserId);
+                let currentFollowersCount = parseInt(userFollowersCountSpan.textContent);
 
-                if (isFollowing) {
+                if (isCurrentlyFollowing) {
                     // Unfollow
                     await currentUserRef.update({
                         following: firebase.firestore.FieldValue.arrayRemove(targetUserId),
                         followingCount: firebase.firestore.FieldValue.increment(-1)
                     });
                     await targetUserRef.update({
+                        // CORRECTED FIELD NAME: from 'followerCount' to 'followersCount'
                         followers: firebase.firestore.FieldValue.arrayRemove(currentUserId),
-                        followerCount: firebase.firestore.FieldValue.increment(-1)
+                        followersCount: firebase.firestore.FieldValue.increment(-1) 
                     });
                     console.log(`User ${currentUserId} unfollowed ${targetUserId}`);
-                    // No notification for unfollow
 
                     // Update UI immediately
                     followButton.textContent = 'Follow';
                     followButton.classList.remove('following');
-                    userFollowersCountSpan.textContent = formatNumber(currentFollowersCount - 1); // Update count with formatNumber
+                    userFollowersCountSpan.textContent = Math.max(0, currentFollowersCount - 1); // Update count, ensure not less than 0
                     
                     // Update currentUserData locally to reflect the change for subsequent checks
-                    currentUserData.following = currentUserData.following.filter(id => id !== targetUserId);
+                    currentUserData.following = (currentUserData.following || []).filter(id => id !== targetUserId);
 
                 } else {
                     // Follow
@@ -988,8 +978,9 @@
                         followingCount: firebase.firestore.FieldValue.increment(1)
                     });
                     await targetUserRef.update({
+                        // CORRECTED FIELD NAME: from 'followerCount' to 'followersCount'
                         followers: firebase.firestore.FieldValue.arrayUnion(currentUserId),
-                        followerCount: firebase.firestore.FieldValue.increment(1)
+                        followersCount: firebase.firestore.FieldValue.increment(1)
                     });
                     console.log(`User ${currentUserId} followed ${targetUserId}`);
 
@@ -1005,7 +996,7 @@
                     // Update UI immediately
                     followButton.textContent = 'Following';
                     followButton.classList.add('following');
-                    userFollowersCountSpan.textContent = formatNumber(currentFollowersCount + 1); // Update count with formatNumber
+                    userFollowersCountSpan.textContent = currentFollowersCount + 1; // Update count
 
                     // Update currentUserData locally to reflect the change for subsequent checks
                     if (!currentUserData.following) {
@@ -1013,9 +1004,6 @@
                     }
                     currentUserData.following.push(targetUserId);
                 }
-                 // Ensure targetUserData is also updated for immediate UI consistency
-                 targetUserData.followersCount = isFollowing ? currentFollowersCount - 1 : currentFollowersCount + 1;
-
             } catch (error) {
                 console.error("Error toggling follow status:", error);
                 alert("Failed to update follow status. Please try again.");
@@ -1048,12 +1036,11 @@
         async function loadUserPosts(querySnapshot) {
             userPostsGrid.innerHTML = '';
             // The visibility of noPostsMessage is now controlled by listenForTargetUserPostCount
-            // noPostsMessage.style.display = 'none'; // Removed this line
+            // noPostsMessage.style.display = 'none'; // This line is now redundant and removed
 
             if (querySnapshot.empty) {
                 // If querySnapshot is empty, the count will be 0, and listenForTargetUserPostCount
                 // will correctly show the noPostsMessage.
-                // userPostsCountSpan.textContent = 0; // Removed this line as count is updated elsewhere
                 return;
             }
 
@@ -1070,59 +1057,56 @@
                 const likedBy = post.likedBy || [];
                 const hasLiked = likedBy.includes(currentUserId);
 
-                // For posts on a user's profile, the primary author displayed will always be the target user.
-                // However, the actual post.userId might be different if it's a collaborated post.
+                // Initialize with target user's details as a default
                 let postAuthorUsername = targetUserData ? (targetUserData.username || 'Unknown User') : 'Unknown User';
                 let postAuthorProfilePicUrl = targetUserData ? (targetUserData.profilePictureUrl || '') : '';
                 let postAuthorIsVerified = targetUserData ? (targetUserData.isVerified || false) : false;
 
-                // --- MODIFIED: Collaborator Display Logic for other users' profiles ---
                 let collabText = '';
-                if (post.collaborators && post.collaborators.length > 0) {
-                    // Filter out the primary author (post.userId) and the target user (if they are a collaborator but not the author)
-                    const relevantCollaboratorIds = post.collaborators.filter(id => id !== post.userId && id !== targetUserId);
-                    
-                    // If the target user is a collaborator AND NOT the author of this specific post, add "with [Target User's Username]"
-                    if (post.userId !== targetUserId && post.collaborators.includes(targetUserId)) {
-                         // We are on the target user's profile, so this post might have targetUser as a collaborator
-                         // In this case, the main username displayed should be the actual post.userId
-                         // And the collab text should show "with [Target User's Username]" or "with you"
-                         const mainAuthorDoc = await db.collection('users').doc(post.userId).get();
-                         if(mainAuthorDoc.exists){
-                             const mainAuthorData = mainAuthorDoc.data();
-                             postAuthorUsername = mainAuthorData.username || 'Unknown User';
-                             postAuthorProfilePicUrl = mainAuthorData.profilePictureUrl || '';
-                             postAuthorIsVerified = mainAuthorData.isVerified || false;
-                             
-                             collabText = `<span class="collab-text"> &bull; with `;
-                             if (targetUserId === currentUserId && currentUserData) {
-                                 collabText += `you`; // Display "you" for the logged-in user viewing their own collaborated post
-                             } else {
-                                 collabText += `${targetUserData.username}`; // Display target user's username
-                             }
-                             // Add other collaborators if any
-                             if (relevantCollaboratorIds.length > 0) {
-                                 const otherCollaboratorUsernames = [];
-                                 for (const collabId of relevantCollaboratorIds) {
-                                     if (collabId === currentUserId && currentUserData) {
-                                         otherCollaboratorUsernames.push('you');
-                                     } else {
-                                         const collabUserDoc = await db.collection('users').doc(collabId).get();
-                                         if (collabUserDoc.exists) {
-                                             otherCollaboratorUsernames.push(collabUserDoc.data().username);
-                                         }
-                                     }
-                                 }
-                                 if (otherCollaboratorUsernames.length > 0) {
-                                     collabText += `, ${otherCollaboratorUsernames.join(', ')}`;
-                                 }
-                             }
-                             collabText += `</span>`;
 
-                         }
-                    } else if (relevantCollaboratorIds.length > 0) { // If target user is the author and there are other collaborators
+                // If the target user is a collaborator AND NOT the original author of this specific post,
+                // the primary author displayed should be the actual post.userId.
+                if (post.collaborators && post.collaborators.includes(targetUserId) && post.userId !== targetUserId) {
+                    const mainAuthorDoc = await db.collection('users').doc(post.userId).get();
+                    if(mainAuthorDoc.exists){
+                        const mainAuthorData = mainAuthorDoc.data();
+                        postAuthorUsername = mainAuthorData.username || 'Unknown User';
+                        postAuthorProfilePicUrl = mainAuthorData.profilePictureUrl || '';
+                        postAuthorIsVerified = mainAuthorData.isVerified || false;
+                    }
+
+                    collabText = `<span class="collab-text"> &bull; with `;
+                    if (targetUserId === currentUserId) { // This specific check is probably not needed here since we redirect if targetUserId === currentUserId
+                        collabText += `you`; 
+                    } else {
+                        collabText += `${targetUserData.username}`; 
+                    }
+                    
+                    // Filter out the primary author and the target user from the collaborator list
+                    const otherCollaboratorIds = (post.collaborators || []).filter(id => id !== post.userId && id !== targetUserId);
+                    if (otherCollaboratorIds.length > 0) {
+                        const otherCollaboratorUsernames = [];
+                        for (const collabId of otherCollaboratorIds) {
+                            if (collabId === currentUserId && currentUserData) {
+                                otherCollaboratorUsernames.push('you');
+                            } else {
+                                const collabUserDoc = await db.collection('users').doc(collabId).get();
+                                if (collabUserDoc.exists) {
+                                    otherCollaboratorUsernames.push(collabUserDoc.data().username);
+                                }
+                            }
+                        }
+                        if (otherCollaboratorUsernames.length > 0) {
+                            collabText += `, ${otherCollaboratorUsernames.join(', ')}`;
+                        }
+                    }
+                    collabText += `</span>`;
+                } else if (post.userId === targetUserId && post.collaborators && post.collaborators.length > 0) {
+                    // Target user is the author, but there are other collaborators
+                    const otherCollaboratorIds = (post.collaborators || []).filter(id => id !== targetUserId);
+                    if (otherCollaboratorIds.length > 0) {
                         const collaboratorUsernames = [];
-                        for (const collabId of relevantCollaboratorIds) {
+                        for (const collabId of otherCollaboratorIds) {
                             if (collabId === currentUserId && currentUserData) {
                                 collaboratorUsernames.push('you');
                             } else {
@@ -1137,7 +1121,6 @@
                         }
                     }
                 }
-                // --- END MODIFIED: Collaborator Display Logic ---
 
 
                 postCard.innerHTML = `
@@ -1157,7 +1140,7 @@
                         <i class="far fa-comment action-icon" data-postid="${postId}"></i>
                     </div>
                     <div class="post-likes-comments">
-                        <span class="likes-count">${formatNumber(numLikes)} likes</span>
+                        <span class="likes-count">${numLikes} likes</span>
                     </div>
                     <div class="post-caption">
                         <span class="caption-username">
@@ -1200,16 +1183,7 @@
                         const postId = likeIcon.dataset.postid;
                         const postRef = db.collection('posts').doc(postId);
                         const currentLikesSpan = card.querySelector('.likes-count');
-                        let currentLikes = parseInt(currentLikesSpan.textContent.split(' ')[0]); // Get number before "likes"
-
-                        // Re-fetch post data to ensure accurate like count for calculation
-                        const postDoc = await postRef.get();
-                        if (!postDoc.exists) {
-                            console.error("Post not found during like update.");
-                            return;
-                        }
-                        const postData = postDoc.data();
-                        currentLikes = postData.likes || 0; // Use actual number from DB
+                        let currentLikes = parseInt(currentLikesSpan.textContent.split(' ')[0]);
 
                         try {
                             if (likeIcon.classList.contains('liked')) {
@@ -1249,15 +1223,14 @@
                                     });
                                 }
                             }
-                            currentLikesSpan.textContent = `${formatNumber(currentLikes)} likes`; // Format and update
+                            currentLikesSpan.textContent = `${currentLikes} likes`;
                         } catch (error) {
                             console.error("Error updating like on user profile:", error);
                         }
                     });
                 }
             });
-            // Removed this line as count is updated by listenForTargetUserPostCount()
-            // userPostsCountSpan.textContent = querySnapshot.size; 
+            // userPostsCountSpan.textContent = querySnapshot.size; // This line is now redundant and removed, count is handled by listenForTargetUserPostCount()
         }
 
         // --- View Single Post (same as profile.html, but ensures redirect to home.html) ---
