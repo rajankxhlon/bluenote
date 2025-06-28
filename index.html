@@ -206,11 +206,11 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Username Creation Form Styles - NO LONGER NEEDED, KEPT FOR REFERENCE */
-        /*
+        /* Username Creation Form Styles */
         #username-form {
-            display: none;
+            display: none; /* Hidden by default */
         }
+
         #username-form h2 {
             font-size: 24px;
             margin-bottom: 20px;
@@ -220,7 +220,6 @@
             color: #666;
             margin-bottom: 20px;
         }
-        */
 
         /* Maintenance Modal Styles */
         .maintenance-modal {
@@ -425,15 +424,19 @@
             <div class="form-group">
                 <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required>
             </div>
-            <div class="form-group">
-                <input type="text" id="signupUsername" placeholder="Username" required>
-            </div>
-            <div class="form-group">
-                <input type="text" id="signupFullname" placeholder="Full Name (Optional)">
-            </div>
             <p class="error-message" id="signupErrorMessage"></p>
             <button id="signupBtn">Sign Up</button>
             <p class="toggle-form-link">Have an account? <a href="#" id="showLogin">Log in</a></p>
+        </div>
+
+        <div id="username-form" style="display: none;">
+            <h2>Create Username</h2>
+            <p>Choose a unique username for your Bluenote account. You can change this later in your profile settings.</p>
+            <div class="form-group">
+                <input type="text" id="usernameInput" placeholder="Username" required>
+            </div>
+            <p class="error-message" id="usernameErrorMessage"></p>
+            <button id="createUsernameBtn">Continue</button>
         </div>
 
         <p class="app-version-display">Version: <span id="currentAppVersion"></span></p>
@@ -485,7 +488,7 @@
             storageBucket: "bluegram-27a79.firebasestorage.app",
             messagingSenderId: "780485443121",
             // IMPORTANT: Ensure this appId is correct for YOUR project from Firebase Console
-            appId: "1:780485443121:web:f7469d2264293fcbdf5f10",
+            appId: "1:780485443121:web:f7469d2264293fcbdf5f10", 
             measurementId: "G-YF5S9HK2Q5"
         };
 
@@ -496,15 +499,14 @@
 
         // --- App Version Configuration ---
         // !!! IMPORTANT: Update this version number when you release a new app version !!!
-        const CURRENT_APP_VERSION = "6.0.1"; // <--- Set your current app version here
+        const CURRENT_APP_VERSION = "5.0.1"; // <--- Set your current app version here
         // --- End App Version Configuration ---
 
 
         // Get references to elements
         const loginForm = document.getElementById('login-form');
         const signupForm = document.getElementById('signup-form');
-        // REMOVED: usernameForm reference
-        // const usernameForm = document.getElementById('username-form');
+        const usernameForm = document.getElementById('username-form');
         const mainContainer = document.getElementById('mainContainer');
 
         const showSignupLink = document.getElementById('showSignup');
@@ -518,16 +520,12 @@
         const signupEmailInput = document.getElementById('signupEmail');
         const signupPasswordInput = document.getElementById('signupPassword');
         const signupConfirmPasswordInput = document.getElementById('signupConfirmPassword');
-        // ADDED: new input references for signup form
-        const signupUsernameInput = document.getElementById('signupUsername');
-        const signupFullnameInput = document.getElementById('signupFullname');
         const signupBtn = document.getElementById('signupBtn');
         const signupErrorMessage = document.getElementById('signupErrorMessage');
 
-        // REMOVED: username form related references
-        // const usernameInput = document.getElementById('usernameInput');
-        // const createUsernameBtn = document.getElementById('createUsernameBtn');
-        // const usernameErrorMessage = document.getElementById('usernameErrorMessage');
+        const usernameInput = document.getElementById('usernameInput');
+        const createUsernameBtn = document.getElementById('createUsernameBtn');
+        const usernameErrorMessage = document.getElementById('usernameErrorMessage');
 
         // Ban Modal Elements
         const banModal = document.getElementById('banModal');
@@ -558,8 +556,7 @@
 
         const LOCAL_STORAGE_LAST_SEEN_UPDATE = 'bluenote_last_seen_update_version'; // Same key as in home.html
 
-        // REMOVED: pendingUserUid, not needed with integrated signup
-        // let pendingUserUid = null;
+        let pendingUserUid = null;
         let isUnderMaintenance = false;
         let authUserPendingCheck = null; // To hold the user object if update is pending
 
@@ -643,10 +640,10 @@
             if (isUnderMaintenance) return;
             loginForm.style.display = 'none';
             signupForm.style.display = 'block';
-            // REMOVED: usernameForm.style.display = 'none';
+            usernameForm.style.display = 'none';
             hideError(loginErrorMessage);
             hideError(signupErrorMessage);
-            // REMOVED: hideError(usernameErrorMessage);
+            hideError(usernameErrorMessage);
         });
 
         showLoginLink.addEventListener('click', (e) => {
@@ -654,14 +651,13 @@
             if (isUnderMaintenance) return;
             signupForm.style.display = 'none';
             loginForm.style.display = 'block';
-            // REMOVED: usernameForm.style.display = 'none';
+            usernameForm.style.display = 'none';
             hideError(loginErrorMessage);
             hideError(signupErrorMessage);
-            // REMOVED: hideError(usernameErrorMessage);
+            hideError(usernameErrorMessage);
         });
 
-        // REMOVED: Function to show the username creation form - no longer needed
-        /*
+        // Function to show the username creation form
         function showUsernameForm() {
             loginForm.style.display = 'none';
             signupForm.style.display = 'none';
@@ -669,13 +665,12 @@
             mainContainer.style.transform = 'translateY(0)';
             mainContainer.style.opacity = '1';
         }
-        */
 
         // Function to show the main login/signup forms
         function showAuthForms() {
             loginForm.style.display = 'block'; // Default to login
             signupForm.style.display = 'none';
-            // REMOVED: usernameForm.style.display = 'none';
+            usernameForm.style.display = 'none';
             mainContainer.style.transform = 'translateY(0)';
             mainContainer.style.opacity = '1';
         }
@@ -880,14 +875,10 @@
                             displayBanPopup(userData.banReason || 'Unusual activities', banEndTime);
                         }
                     } else if (!userData.username) {
-                        // This case should ideally not happen if username is collected during signup
-                        // but keeping it as a fallback for existing users without username or other edge cases
-                        console.log('User logged in but needs to create a username (fallback).');
-                        // For existing users who may not have username, prompt them here.
-                        // For new users, this path should now be avoided.
-                        alert('Your account is missing a username. Please update your profile from the profile page.');
+                        console.log('User logged in but needs to create a username.');
+                        pendingUserUid = user.uid;
                         hideLoadingScreen();
-                        window.location.href = 'home.html'; // Or redirect to a profile setup page
+                        showUsernameForm();
                     }
                     else {
                         hideLoadingScreen();
@@ -895,26 +886,11 @@
                     }
                 } else {
                     console.warn('User document not found for UID:', user.uid);
-                    // If user document doesn't exist after auth, create a basic one
-                    // This is a crucial fallback. If signup didn't complete Firestore write, this will save basic info.
-                    await db.collection('users').doc(user.uid).set({
-                        uid: user.uid,
-                        username: user.email ? user.email.split('@')[0] : 'user' + user.uid.substring(0, 5), // Default username
-                        fullname: '', // Default fullname
-                        email: user.email || '',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        isBanned: false,
-                        banReason: null,
-                        banEndTime: null,
-                        postsCount: 0,
-                        followersCount: 0,
-                        followingCount: 0,
-                        following: [],
-                        followers: []
-                    });
-                    console.log('Created missing user document with default data for UID:', user.uid);
+                    // This scenario might happen if a user signs up via a different method
+                    // (e.g., social login) and their profile isn't immediately created.
+                    pendingUserUid = user.uid;
                     hideLoadingScreen();
-                    window.location.href = 'home.html';
+                    showUsernameForm();
                 }
             } catch (error) {
                 console.error('Error checking ban status or user profile:', error.message);
@@ -981,14 +957,11 @@
             const email = signupEmailInput.value;
             const password = signupPasswordInput.value;
             const confirmPassword = signupConfirmPasswordInput.value;
-            const username = signupUsernameInput.value.trim(); // Get username
-            const fullname = signupFullnameInput.value.trim(); // Get fullname (can be empty)
-
             hideError(signupErrorMessage);
             signupBtn.disabled = true;
 
-            if (!email || !password || !confirmPassword || !username) { // username is now required
-                showError(signupErrorMessage, 'Please fill in all required fields.');
+            if (!email || !password || !confirmPassword) {
+                showError(signupErrorMessage, 'Please fill in all fields.');
                 signupBtn.disabled = false;
                 return;
             }
@@ -1005,59 +978,18 @@
                 return;
             }
 
-            if (username.length < 3) {
-                showError(signupErrorMessage, 'Username must be at least 3 characters long.');
-                signupBtn.disabled = false;
-                return;
-            }
-            if (!/^[a-zA-Z0-9_.]+$/.test(username)) {
-                showError(signupErrorMessage, 'Username can only contain letters, numbers, periods, and underscores.');
-                signupBtn.disabled = false;
-                return;
-            }
-
-            showLoadingScreen('Signing up...');
+            showLoadingScreen('Signing up...'); // Show loading screen for signup
             try {
-                const usersRef = db.collection('users');
-
-                // First, check if username is already taken BEFORE creating auth user
-                const usernameQuerySnapshot = await usersRef.where('username', '==', username).get();
-                if (!usernameQuerySnapshot.empty) {
-                    showError(signupErrorMessage, 'Username "' + username + '" is already taken. Please choose another.');
-                    hideLoadingScreen();
-                    signupBtn.disabled = false;
-                    return;
-                }
-
-                // Create Firebase Auth user
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
                 console.log('User signed up:', user);
 
-                // Save user profile immediately with username and fullname
-                await usersRef.doc(user.uid).set({
-                    uid: user.uid,
-                    username: username,
-                    fullname: fullname, // Save fullname here
-                    email: user.email,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    isBanned: false,
-                    banReason: null,
-                    banEndTime: null,
-                    postsCount: 0,
-                    followersCount: 0,
-                    followingCount: 0,
-                    following: [],
-                    followers: [] // Initialize followers array for consistency
-                });
-
-                console.log('New user document created in Firestore with username and fullname.');
-
-                // Proceed to check ban status and redirect
-                await checkBanStatusAndHandleLogin(user); // This will redirect to home.html if not banned
+                pendingUserUid = user.uid;
+                hideLoadingScreen(); // Hide loading screen before showing username form
+                showUsernameForm();
 
             } catch (error) {
-                hideLoadingScreen();
+                hideLoadingScreen(); // Hide loading screen on error
                 console.error('Signup error:', error.message);
                 switch (error.code) {
                     case 'auth/email-already-in-use':
@@ -1077,8 +1009,7 @@
             }
         });
 
-        // REMOVED: The entire createUsernameBtn.addEventListener block - no longer needed
-        /*
+        // Create Username
         createUsernameBtn.addEventListener('click', async () => {
             if (isUnderMaintenance) {
                 showError(usernameErrorMessage, 'Cannot create username due to server maintenance.');
@@ -1151,7 +1082,6 @@
                 createUsernameBtn.disabled = false;
             }
         });
-        */
 
         // Initial setup on page load
         document.addEventListener('DOMContentLoaded', async () => {
@@ -1168,7 +1098,7 @@
             } else {
                 // If not under maintenance, check for app updates
                 const updateShown = await checkForAppUpdates();
-
+                
                 if (!updateShown) {
                     // If no update modal is shown, proceed with auth state check immediately
                     auth.onAuthStateChanged((user) => {
@@ -1189,7 +1119,7 @@
                         } else {
                             // If no user is logged in, just hide loading screen
                             // The update modal is already visible
-                            hideLoadingScreen();
+                            hideLoadingScreen(); 
                         }
                     });
                 }
@@ -1198,4 +1128,4 @@
 
     </script>
 </body>
-    </html>
+</html>
