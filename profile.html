@@ -8,7 +8,7 @@
     <style>
         /* Global Styles */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             background-color: #121212; /* Dark background */
             color: #f5f5f5; /* Light text for dark theme */
@@ -314,7 +314,7 @@
             margin-bottom: 20px;
         }
 
-        /* --- UPDATED: Post Card Styles --- */
+        /* --- NEW/UPDATED: Post Card Styles --- */
         .post-card {
             background-color: #1a1a1a;
             border-radius: 8px;
@@ -374,12 +374,6 @@
             margin-left: 5px;
         }
 
-        .post-header .collab-text {
-            font-size: 13px;
-            color: #8e8e8e;
-            margin-left: 5px;
-        }
-
         .post-image {
             width: 100%;
             max-height: 500px; /* Limit height */
@@ -422,43 +416,17 @@
             gap: 15px; /* Space between likes and comments text */
         }
 
-        .post-likes-comments .likes-count {
+        .post-likes-comments .likes-count,
+        .post-likes-comments .comments-count {
             color: #f5f5f5; /* Ensure text color is light */
         }
 
-        /* --- CRITICAL UPDATED CSS FOR CAPTION WITH USERNAME AND INLINE TEXT --- */
         .post-caption {
             padding: 0 15px 10px;
             font-size: 14px;
             color: #f5f5f5;
-            white-space: pre-wrap; /* Preserve formatting for breaks within caption text */
-            display: flex; /* Use flexbox to put username and text on same line */
-            align-items: baseline; /* Align items at their text baselines */
-            /* Remove flex-wrap if you always want it on one line, but it's good for long captions */
-            flex-wrap: wrap; 
+            white-space: pre-wrap; /* Preserve formatting */
         }
-
-        .post-caption .caption-username {
-            font-weight: bold;
-            color: #f5f5f5;
-            margin-right: 5px; /* Space between username and caption text */
-            display: inline-flex; /* Use inline-flex to contain the username and badge */
-            align-items: center;
-            white-space: nowrap; /* Prevent username and badge from wrapping */
-        }
-
-        .post-caption .caption-username .verified-badge {
-            width: 14px;
-            height: 14px;
-            margin-left: 5px;
-            vertical-align: middle;
-        }
-
-        .post-caption .caption-text {
-            /* No specific styling needed unless you want it different from default */
-            flex-grow: 1; /* Allows caption text to take up remaining space */
-        }
-        /* --- END UPDATED CSS FOR CAPTION --- */
 
         .post-timestamp {
             padding: 0 15px 12px;
@@ -659,19 +627,6 @@
                 padding: 0 12px 8px; /* Adjusted padding */
                 gap: 12px; /* Adjusted gap */
             }
-            /* Adjusted for new caption structure */
-            .post-caption {
-                font-size: 13px;
-                padding: 0 12px 8px; /* Adjusted padding */
-            }
-            .post-caption .caption-username {
-                font-size: 13px; /* Ensure consistency */
-            }
-            .post-caption .caption-username .verified-badge {
-                width: 12px; /* Smaller badge for smaller screens */
-                height: 12px;
-            }
-            /* End adjusted for new caption structure */
             .post-timestamp {
                 font-size: 11px;
             }
@@ -763,22 +718,12 @@
                 padding: 0 10px 6px; /* Adjusted padding */
                 gap: 10px; /* Adjusted gap */
             }
-            /* Adjusted for new caption structure */
-            .post-caption {
-                font-size: 12px;
-                padding: 0 10px 6px; /* Adjusted padding */
-            }
-            .post-caption .caption-username {
-                font-size: 12px; /* Ensure consistency */
-            }
-            .post-caption .caption-username .verified-badge {
-                width: 10px; /* Smaller badge for smaller screens */
-                height: 10px;
-            }
-            /* End adjusted for new caption structure */
             .post-timestamp {
                 font-size: 10px;
                 padding: 0 10px 10px;
+            }
+            .post-options {
+                font-size: 16px;
             }
             .post-options-dropdown {
                 min-width: 120px;
@@ -943,17 +888,6 @@
             </g>
         </svg>`;
 
-        // Helper function to format numbers (e.g., 1200 -> 1.2K, 1200000 -> 1.2M)
-        function formatNumber(num) {
-            if (num >= 1000000) {
-                return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-            }
-            if (num >= 1000) {
-                return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-            }
-            return num.toString();
-        }
-
         // Function to update the footer profile picture
         function updateFooterProfilePicture(profilePictureUrl, username) {
             footerProfileCircle.innerHTML = ''; // Clear previous content
@@ -975,8 +909,8 @@
         // --- Authentication and User Data Loading ---
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
-                console.log('No user logged in, redirecting to index.html');
-                window.location.href = 'index.html';
+                console.log('No user logged in, redirecting to login.html');
+                window.location.href = 'login.html';
             } else {
                 currentUserId = user.uid;
                 console.log('User is logged in. User ID:', currentUserId); // Log the current user ID
@@ -1010,8 +944,18 @@
                     alert("Error loading user profile. Please check console for details.");
                 });
 
-                // Call loadUserPosts initially
-                loadUserPosts();
+                // Set up real-time listener for current user's posts
+                db.collection('posts')
+                    .where('userId', '==', currentUserId)
+                    .orderBy('timestamp', 'desc') // Ensure 'timestamp' field exists in posts
+                    .onSnapshot((snapshot) => {
+                        console.log('--- Post Query Snapshot Received ---');
+                        console.log('Number of documents in snapshot:', snapshot.docs.length);
+                        loadUserPosts(snapshot);
+                    }, (error) => {
+                        console.error("Error loading user posts in real-time:", error);
+                        alert("Error loading user posts. Please check console for details.");
+                    });
             }
         });
 
@@ -1051,10 +995,10 @@
             }
             bioInput.value = bioContent;
 
-            // Counts - Using formatNumber for display
-            postsCountSpan.textContent = formatNumber(currentUserData.postsCount || 0);
-            followersCountSpan.textContent = formatNumber(currentUserData.followersCount || 0);
-            followingCountSpan.textContent = formatNumber(currentUserData.followingCount || 0);
+            // Counts
+            postsCountSpan.textContent = currentUserData.postsCount || 0;
+            followersCountSpan.textContent = currentUserData.followersCount || 0;
+            followingCountSpan.textContent = currentUserData.followingCount || 0;
         }
 
         // Helper to format Firestore Timestamps
@@ -1080,243 +1024,182 @@
         }
 
 
-        // UPDATED: loadUserPosts to include collaborated posts
-        async function loadUserPosts() {
-            if (!currentUserId) {
-                console.log("No user ID available to load posts.");
-                return;
-            }
-
+        // Updated loadUserPosts to create full post cards and calculate total likes
+        async function loadUserPosts(querySnapshot) {
             myPostsGrid.innerHTML = ''; // Clear previous posts
             noPostsMessage.style.display = 'none'; // Hide default message
 
-            let allPosts = []; // Array to store all unique posts
+            let currentPostsCount = 0; // To accurately count posts displayed
 
-            try {
-                // 1. Fetch posts authored by the current user
-                const ownPostsSnapshot = await db.collection('posts')
-                    .where('userId', '==', currentUserId)
-                    .get();
+            if (querySnapshot.empty) {
+                console.log('Query snapshot is empty. Showing "No posts yet" message.');
+                noPostsMessage.style.display = 'block';
+                if (!myPostsGrid.contains(noPostsMessage)) {
+                    myPostsGrid.appendChild(noPostsMessage);
+                }
+                postsCountSpan.textContent = 0; // Ensure count is 0 if no posts are found by the query
+                return;
+            }
 
-                ownPostsSnapshot.forEach(doc => {
-                    allPosts.push({ id: doc.id, ...doc.data() });
-                });
+            const postPromises = querySnapshot.docs.map(async doc => {
+                const post = doc.data();
+                const postId = doc.id;
+                console.log('Processing post:', postId, post);
 
-                // 2. Fetch posts where the current user is a collaborator
-                const collabPostsSnapshot = await db.collection('posts')
-                    .where('collaborators', 'array-contains', currentUserId)
-                    .get();
+                // Increment posts count
+                currentPostsCount++;
 
-                collabPostsSnapshot.forEach(doc => {
-                    // Add only if not already present (to avoid duplicates if user is author AND collaborator)
-                    if (!allPosts.some(post => post.id === doc.id)) {
-                        allPosts.push({ id: doc.id, ...doc.data() });
+                // Fetch the user's current profile data for this post's display
+                let postAuthorUsername = post.username || 'Unknown User';
+                let postAuthorProfilePicUrl = '';
+                let postAuthorIsVerified = false;
+
+                // Only fetch author data if userId is available in the post document
+                if (post.userId) {
+                    try {
+                        const authorDoc = await db.collection('users').doc(post.userId).get();
+                        if (authorDoc.exists) {
+                            const authorData = authorDoc.data();
+                            postAuthorUsername = authorData.username || postAuthorUsername;
+                            postAuthorProfilePicUrl = authorData.profilePictureUrl || '';
+                            postAuthorIsVerified = authorData.isVerified || false;
+                        } else {
+                            console.warn(`Author document for userId ${post.userId} not found for post ${postId}`);
+                        }
+                    } catch (error) {
+                        console.error('Error fetching author data for post', postId, error);
                     }
-                });
-
-                // Sort all posts by timestamp in descending order
-                allPosts.sort((a, b) => {
-                    const timeA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
-                    const timeB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
-                    return timeB - timeA;
-                });
-
-                if (allPosts.length === 0) {
-                    console.log('No posts (authored or collaborated). Showing "No posts yet" message.');
-                    noPostsMessage.style.display = 'block';
-                    if (!myPostsGrid.contains(noPostsMessage)) {
-                        myPostsGrid.appendChild(noPostsMessage);
-                    }
-                    postsCountSpan.textContent = formatNumber(0); // Also format this
-                    return;
                 }
 
-                const postPromises = allPosts.map(async postData => {
-                    const post = postData;
-                    const postId = postData.id;
-                    console.log('Processing post:', postId, post);
+                const postCard = document.createElement('div');
+                postCard.classList.add('post-card');
+                postCard.setAttribute('data-post-id', postId); // Store postId on the card
 
-                    // Fetch the user's current profile data for this post's display
-                    let postAuthorUsername = post.username || 'Unknown User';
-                    let postAuthorProfilePicUrl = '';
-                    let postAuthorIsVerified = false;
+                const formattedTime = formatTimestamp(post.timestamp);
 
-                    // Only fetch author data if userId is available in the post document
-                    if (post.userId) {
+                // Get actual like and comment counts (from 'likes' field for likes, will need comments subcollection if you have one)
+                const numLikes = post.likes || 0;
+                // For comments, you would typically query a subcollection or have a commentsCount field on the post.
+                // For now, let's assume 0 if you haven't implemented it fully.
+                const numComments = 0; // Placeholder. If you have a 'commentsCount' field on post, use that.
+                // To get actual comments count, you'd need:
+                // const commentsSnapshot = await db.collection('posts').doc(postId).collection('comments').get();
+                // const numComments = commentsSnapshot.size;
+
+                const likedBy = post.likedBy || [];
+                const hasLiked = likedBy.includes(currentUserId);
+
+
+                postCard.innerHTML = `
+                    <div class="post-header">
+                        <div class="profile-pic">
+                            ${postAuthorProfilePicUrl ? `<img src="${postAuthorProfilePicUrl}" alt="${postAuthorUsername}'s profile pic">` : `<span class="initials">${postAuthorUsername.charAt(0).toUpperCase()}</span>`}
+                        </div>
+                        <span class="username">
+                            ${postAuthorUsername}
+                            ${postAuthorIsVerified ? verifiedSVG : ''}
+                        </span>
+                        <div class="post-options" data-post-id="${postId}" data-image-url="${post.imageUrl}">
+                            <i class="fas fa-ellipsis-h"></i>
+                            <div class="post-options-dropdown" id="dropdown-${postId}" onclick="event.stopPropagation()">
+                                <button class="edit-btn">Edit Post</button>
+                                <button class="delete-btn">Delete Post</button>
+                            </div>
+                        </div>
+                    </div>
+                    <img src="${post.imageUrl}" alt="Post Image" class="post-image">
+                    <div class="post-caption">
+                        ${post.caption}
+                    </div>
+                    <div class="post-actions">
+                        <i class="${hasLiked ? 'fas' : 'far'} fa-heart action-icon ${hasLiked ? 'liked' : ''}" data-postid="${postId}"></i>
+                        <i class="far fa-comment action-icon" data-postid="${postId}"></i>
+                    </div>
+                    <div class="post-likes-comments">
+                        <span class="likes-count">${numLikes} likes</span>
+                        <span class="comments-count">${numComments} comments</span>
+                    </div>
+                    <div class="post-timestamp">${formattedTime}</div>
+                `;
+                return postCard;
+            });
+
+            // Wait for all post cards to be created, then append them
+            const postCards = await Promise.all(postPromises);
+            postCards.forEach(card => {
+                myPostsGrid.appendChild(card);
+                // Add click listener to the entire post card for single post view
+                card.addEventListener('click', (event) => {
+                    // Prevent click from triggering if the event originated from the options menu or other interactive elements
+                    if (!event.target.closest('.post-options') &&
+                        !event.target.closest('.action-icon')) { // NEW: Prevent if clicking on icons
+                        viewSinglePost(card.getAttribute('data-post-id'));
+                    }
+                });
+
+                // Add event listener for the comment icon specifically
+                const commentIcon = card.querySelector('.post-actions .fa-comment');
+                if (commentIcon) {
+                    commentIcon.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Stop propagation to prevent post card click
+                        const postId = commentIcon.dataset.postid;
+                        window.location.href = `comments.html?postId=${postId}`;
+                    });
+                }
+
+                // Add event listener for the like icon specifically
+                const likeIcon = card.querySelector('.post-actions .fa-heart');
+                if (likeIcon) {
+                    likeIcon.addEventListener('click', async (event) => {
+                        event.stopPropagation(); // Stop propagation to prevent post card click
+                        const postId = likeIcon.dataset.postid;
+                        const postRef = db.collection('posts').doc(postId);
+                        const currentLikesSpan = card.querySelector('.likes-count');
+                        let currentLikes = parseInt(currentLikesSpan.textContent.split(' ')[0]);
+
                         try {
-                            const authorDoc = await db.collection('users').doc(post.userId).get();
-                            if (authorDoc.exists) {
-                                const authorData = authorDoc.data();
-                                postAuthorUsername = authorData.username || postAuthorUsername;
-                                postAuthorProfilePicUrl = authorData.profilePictureUrl || '';
-                                postAuthorIsVerified = authorData.isVerified || false;
+                            if (likeIcon.classList.contains('liked')) {
+                                // Unlike
+                                await postRef.update({
+                                    likes: firebase.firestore.FieldValue.increment(-1),
+                                    likedBy: firebase.firestore.FieldValue.arrayRemove(currentUserId)
+                                });
+                                currentLikes--;
+                                likeIcon.classList.remove('liked', 'fas');
+                                likeIcon.classList.add('far');
+                                console.log(`Post ${postId} unliked!`);
                             } else {
-                                console.warn(`Author document for userId ${post.userId} not found for post ${postId}`);
+                                // Like
+                                await postRef.update({
+                                    likes: firebase.firestore.FieldValue.increment(1),
+                                    likedBy: firebase.firestore.FieldValue.arrayUnion(currentUserId)
+                                });
+                                currentLikes++;
+                                likeIcon.classList.add('liked', 'fas');
+                                likeIcon.classList.remove('far');
+                                console.log(`Post ${postId} liked!`);
                             }
+                            currentLikesSpan.textContent = `${currentLikes} likes`;
                         } catch (error) {
-                            console.error('Error fetching author data for post', postId, error);
-                        }
-                    }
-
-                    // --- NEW: Collaborator Display Logic ---
-                    let collabText = '';
-                    // Check if current user is the author, or if they are a collaborator
-                    const isCurrentUserAuthor = (post.userId === currentUserId);
-                    const isCurrentUserCollaborator = post.collaborators && post.collaborators.includes(currentUserId);
-
-                    if (!isCurrentUserAuthor && isCurrentUserCollaborator) {
-                        // This post is authored by someone else, but I am a collaborator
-                        collabText = `<span class="collab-text"> &bull; collaborated with ${currentUserData.username}</span>`;
-                    }
-                    // --- END NEW: Collaborator Display Logic ---
-
-
-                    const postCard = document.createElement('div');
-                    postCard.classList.add('post-card');
-                    postCard.setAttribute('data-post-id', postId); // Store postId on the card
-
-                    const formattedTime = formatTimestamp(post.timestamp);
-
-                    // Get actual like and comment counts
-                    const numLikes = post.likes || 0;
-                    const likedBy = post.likedBy || [];
-                    const hasLiked = likedBy.includes(currentUserId);
-
-                    let postOptionsHtml = `
-                        <button class="edit-btn" ${isCurrentUserAuthor ? '' : 'style="display:none;"'}>Edit Post</button>
-                        <button class="delete-btn" ${isCurrentUserAuthor ? '' : 'style="display:none;"'}>Delete Post</button>
-                        <button class="remove-collab-btn" ${!isCurrentUserAuthor && isCurrentUserCollaborator ? '' : 'style="display:none;"'}>Remove Me from Collab</button>
-                    `;
-
-
-                    postCard.innerHTML = `
-                        <div class="post-header">
-                            <div class="profile-pic">
-                                ${postAuthorProfilePicUrl ? `<img src="${postAuthorProfilePicUrl}" alt="${postAuthorUsername}'s profile pic">` : `<span class="initials">${postAuthorUsername.charAt(0).toUpperCase()}</span>`}
-                            </div>
-                            <span class="username">
-                                ${postAuthorUsername}
-                                ${postAuthorIsVerified ? verifiedSVG : ''}
-                                ${collabText} </span>
-                            <div class="post-options" data-post-id="${postId}" data-image-url="${post.imageUrl}">
-                                <i class="fas fa-ellipsis-h"></i>
-                                <div class="post-options-dropdown" id="dropdown-${postId}" onclick="event.stopPropagation()">
-                                    ${postOptionsHtml}
-                                </div>
-                            </div>
-                        </div>
-                        <img src="${post.imageUrl}" alt="Post Image" class="post-image">
-                        <div class="post-actions">
-                            <i class="${hasLiked ? 'fas' : 'far'} fa-heart action-icon ${hasLiked ? 'liked' : ''}" data-postid="${postId}"></i>
-                            <i class="far fa-comment action-icon" data-postid="${postId}"></i>
-                        </div>
-                        <div class="post-likes-comments">
-                            <span class="likes-count">${formatNumber(numLikes)} likes</span>
-                        </div>
-                        <div class="post-caption">
-                            <span class="caption-username">
-                                ${postAuthorUsername}
-                                ${postAuthorIsVerified ? verifiedSVG : ''}
-                            </span>
-                            <span class="caption-text">${post.caption}</span>
-                        </div>
-                        <div class="post-timestamp">${formattedTime}</div>
-                    `;
-                    return postCard;
-                });
-
-                // Wait for all post cards to be created, then append them
-                const postCards = await Promise.all(postPromises);
-                postCards.forEach(card => {
-                    myPostsGrid.appendChild(card);
-                    // Add click listener to the entire post card for single post view
-                    card.addEventListener('click', (event) => {
-                        // Prevent click from triggering if the event originated from the options menu or other interactive elements
-                        if (!event.target.closest('.post-options') &&
-                            !event.target.closest('.action-icon')) {
-                            viewSinglePost(card.getAttribute('data-post-id'));
+                            console.error("Error updating like on profile:", error);
                         }
                     });
+                }
+            });
 
-                    // Add event listener for the comment icon specifically
-                    const commentIcon = card.querySelector('.post-actions .fa-comment');
-                    if (commentIcon) {
-                        commentIcon.addEventListener('click', (event) => {
-                            event.stopPropagation(); // Stop propagation to prevent post card click
-                            const postId = commentIcon.dataset.postid;
-                            window.location.href = `comments.html?postId=${postId}`;
-                        });
-                    }
-
-                    // Add event listener for the like icon specifically
-                    const likeIcon = card.querySelector('.post-actions .fa-heart');
-                    if (likeIcon) {
-                        likeIcon.addEventListener('click', async (event) => {
-                            event.stopPropagation(); // Stop propagation to prevent post card click
-                            const postId = likeIcon.dataset.postid;
-                            const postRef = db.collection('posts').doc(postId);
-                            const currentLikesSpan = card.querySelector('.likes-count');
-                            // Parse current likes from the formatted string, then get the raw number
-                            let currentLikesText = currentLikesSpan.textContent.split(' ')[0];
-                            let currentLikes;
-
-                            if (currentLikesText.endsWith('K')) {
-                                currentLikes = parseFloat(currentLikesText) * 1000;
-                            } else if (currentLikesText.endsWith('M')) {
-                                currentLikes = parseFloat(currentLikesText) * 1000000;
-                            } else {
-                                currentLikes = parseInt(currentLikesText);
-                            }
-
-
-                            try {
-                                if (likeIcon.classList.contains('liked')) {
-                                    // Unlike
-                                    await postRef.update({
-                                        likes: firebase.firestore.FieldValue.increment(-1),
-                                        likedBy: firebase.firestore.FieldValue.arrayRemove(currentUserId)
-                                    });
-                                    currentLikes--;
-                                    likeIcon.classList.remove('liked', 'fas');
-                                    likeIcon.classList.add('far');
-                                    console.log(`Post ${postId} unliked!`);
-                                } else {
-                                    // Like
-                                    await postRef.update({
-                                        likes: firebase.firestore.FieldValue.increment(1),
-                                        likedBy: firebase.firestore.FieldValue.arrayUnion(currentUserId)
-                                    });
-                                    currentLikes++;
-                                    likeIcon.classList.add('liked', 'fas');
-                                    likeIcon.classList.remove('far');
-                                    console.log(`Post ${postId} liked!`);
-                                }
-                                currentLikesSpan.textContent = `${formatNumber(currentLikes)} likes`; // Format updated count
-                            } catch (error) {
-                                console.error("Error updating like on profile:", error);
-                            }
-                        });
-                    }
+            // Attach event listeners for the new kebab menus
+            document.querySelectorAll('.post-options').forEach(optionIcon => {
+                optionIcon.addEventListener('click', (event) => {
+                    const postId = optionIcon.getAttribute('data-post-id');
+                    const imageUrl = optionIcon.getAttribute('data-image-url'); // Note: imageUrl is not strictly needed for delete from Firestore or edit
+                    openPostOptions(postId, imageUrl, optionIcon.querySelector('.post-options-dropdown'));
+                    event.stopPropagation(); // Prevent document click from closing it immediately
                 });
+            });
 
-                // Attach event listeners for the new kebab menus
-                document.querySelectorAll('.post-options').forEach(optionIcon => {
-                    optionIcon.addEventListener('click', (event) => {
-                        const postId = optionIcon.getAttribute('data-post-id');
-                        const imageUrl = optionIcon.getAttribute('data-image-url');
-                        openPostOptions(postId, imageUrl, optionIcon.querySelector('.post-options-dropdown'));
-                        event.stopPropagation(); // Prevent document click from closing it immediately
-                    });
-                });
-
-                // Update counts after all posts are processed
-                postsCountSpan.textContent = formatNumber(allPosts.length); // Format this count too
-                console.log('Finished loading posts. Total displayed:', allPosts.length);
-
-            } catch (error) {
-                console.error("Error loading user posts:", error);
-                alert("Error loading user posts. Please check console for details.");
-            }
+            // Update counts after all posts are processed
+            postsCountSpan.textContent = currentPostsCount;
+            console.log('Finished loading posts. Total displayed:', currentPostsCount);
         }
 
         // --- NEW FUNCTION: View Single Post ---
@@ -1336,21 +1219,15 @@
             currentOpenDropdown = dropdownElement.classList.contains('show') ? dropdownElement : null;
 
             // Attach event listeners for buttons inside this specific dropdown
-            // Ensure listeners are re-attached each time the dropdown is opened
-            const editBtn = dropdownElement.querySelector('.edit-btn');
-            if (editBtn) editBtn.onclick = () => editPost(postId, dropdownElement);
-            
-            const deleteBtn = dropdownElement.querySelector('.delete-btn');
-            if (deleteBtn) deleteBtn.onclick = () => deletePost(postId, imageUrl, dropdownElement);
-            
-            const removeCollabBtn = dropdownElement.querySelector('.remove-collab-btn');
-            if (removeCollabBtn) removeCollabBtn.onclick = () => removeMeFromCollab(postId, dropdownElement);
+            dropdownElement.querySelector('.edit-btn').onclick = () => editPost(postId, dropdownElement);
+            dropdownElement.querySelector('.delete-btn').onclick = () => deletePost(postId, imageUrl, dropdownElement);
         }
 
         // Close dropdown if clicked outside
         document.addEventListener('click', (event) => {
             if (currentOpenDropdown && !currentOpenDropdown.contains(event.target) && !event.target.closest('.post-options')) {
                 currentOpenDropdown.classList.remove('show');
+                currentOpenDropdown = null;
             }
         });
 
@@ -1368,13 +1245,6 @@
             currentOpenDropdown = null;
 
             try {
-                // Fetch the post to check if the current user is the original author
-                const postDoc = await db.collection('posts').doc(postId).get();
-                if (!postDoc.exists || postDoc.data().userId !== currentUserId) {
-                    alert('You can only delete posts you authored.');
-                    return;
-                }
-
                 // Delete image from Firebase Storage if it was stored there
                 // This assumes imageUrl is a Firebase Storage URL. If it's ImgBB, this won't apply directly.
                 // For ImgBB, you typically can't delete programmatically without their admin panel.
@@ -1401,7 +1271,7 @@
                 }
 
                 alert('Post deleted successfully!');
-                loadUserPosts(); // Re-load posts after deletion
+                // UI will automatically update due to real-time listener
             } catch (error) {
                 console.error("Error deleting post:", error);
                 alert('Failed to delete post. Please try again.');
@@ -1421,12 +1291,6 @@
             try {
                 const doc = await postRef.get();
                 if (doc.exists) {
-                    // Check if the current user is the original author to allow editing
-                    if (doc.data().userId !== currentUserId) {
-                        alert('You can only edit posts you authored.');
-                        return;
-                    }
-
                     const currentCaption = doc.data().caption || '';
                     const newCaption = prompt('Edit your caption:', currentCaption);
 
@@ -1434,7 +1298,7 @@
                         await postRef.update({ caption: newCaption.trim() });
                         console.log('Post caption updated:', postId);
                         alert('Caption updated successfully!');
-                        loadUserPosts(); // Re-load posts after edit
+                        // UI will automatically update due to real-time listener
                     } else if (newCaption === null) {
                         console.log('Caption edit cancelled.');
                     } else {
@@ -1447,51 +1311,6 @@
             } catch (error) {
                 console.error("Error editing post:", error);
                 alert('Failed to edit post. Please try again.');
-            }
-        }
-
-        // --- NEW: Function to remove current user from collaboration ---
-        async function removeMeFromCollab(postId, dropdownElement) {
-            if (!currentUserId) {
-                alert('User not authenticated.');
-                return;
-            }
-
-            if (!confirm('Are you sure you want to remove yourself from this collaboration? You will no longer be listed as a collaborator on this post.')) {
-                return;
-            }
-
-            dropdownElement.classList.remove('show'); // Close dropdown immediately
-            currentOpenDropdown = null;
-
-            const postRef = db.collection('posts').doc(postId);
-            try {
-                const postDoc = await postRef.get();
-                if (!postDoc.exists) {
-                    alert('Post not found.');
-                    return;
-                }
-
-                const postData = postDoc.data();
-                if (postData.userId === currentUserId) {
-                    alert('You are the author of this post. You cannot remove yourself as a collaborator from your own post.');
-                    return;
-                }
-
-                // Check if the current user is actually in the collaborators array
-                if (postData.collaborators && postData.collaborators.includes(currentUserId)) {
-                    await postRef.update({
-                        collaborators: firebase.firestore.FieldValue.arrayRemove(currentUserId)
-                    });
-                    console.log(`User ${currentUserId} removed from collaborators of post ${postId}.`);
-                    alert('You have been successfully removed from this collaboration.');
-                    loadUserPosts(); // Re-load posts to reflect the change
-                } else {
-                    alert('You are not listed as a collaborator on this post.');
-                }
-            } catch (error) {
-                console.error("Error removing user from collaboration:", error);
-                alert('Failed to remove you from collaboration. Please try again.');
             }
         }
 
@@ -1510,7 +1329,7 @@
         logoutButton.addEventListener('click', async () => {
             try {
                 await auth.signOut();
-                window.location.href = 'index.html';
+                window.location.href = 'login.html';
             } catch (error) {
                 console.error("Error logging out:", error);
                 alert("Logout failed. Please try again.");
@@ -1659,8 +1478,7 @@
                     await db.collection('users').doc(currentUserId).update({ bio: newBio });
                     console.log('Bio updated successfully!');
                     alert('Bio updated!');
-                }
-                catch (error) {
+                } catch (error) {
                     console.error('Error updating bio:', error);
                     alert('Failed to update bio. Please try again.');
                 }
